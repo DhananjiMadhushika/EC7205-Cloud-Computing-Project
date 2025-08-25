@@ -34,8 +34,6 @@ class App {
   }
 
   setMiddlewares() {
-    this.app.use(express.json());
-    this.app.use(express.urlencoded({ extended: false }));
 
     this.app.use(
       cors({
@@ -44,6 +42,11 @@ class App {
         credentials: true, // if you need cookies or auth headers
       })
     );
+
+    this.app.use(express.json({ limit: "50mb" }));
+    this.app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+
+    
   }
 
   setRoutes() {

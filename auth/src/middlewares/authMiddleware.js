@@ -16,7 +16,7 @@ export default async function authMiddleware(req, res, next) {
       return next(new UnauthorizedException("Unauthorized", ErrorCode.UNAUTHORIZED));
     }
 
-    req.user = user;
+    req.user = user; // ✅ attach full user doc
     next();
   } catch (error) {
     return next(new UnauthorizedException("Unauthorized", ErrorCode.UNAUTHORIZED));

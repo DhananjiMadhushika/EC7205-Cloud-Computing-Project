@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import jwt from "jsonwebtoken";
 // import { OAuth2Client } from "google-auth-library";
 import User from "../models/user.js";
 
@@ -53,10 +53,12 @@ const AuthController = {
     let user = await User.findOne({ email });
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    if (!await bcrypt.compare(password, user.password))
+    if (!(await bcrypt.compare(password, user.password)))
       return res.status(400).json({ error: "Incorrect password" });
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
     res.json({ user, token });
   },
 
@@ -68,7 +70,8 @@ const AuthController = {
     if (!user) return res.status(404).json({ error: "User not found" });
 
     const isMatch = await bcrypt.compare(currentPassword, user.password);
-    if (!isMatch) return res.status(400).json({ error: "Current password is incorrect" });
+    if (!isMatch)
+      return res.status(400).json({ error: "Current password is incorrect" });
 
     user.password = await bcrypt.hash(newPassword, 10);
     await user.save();
@@ -81,7 +84,10 @@ const AuthController = {
     if (!user) return res.status(404).json({ error: "User not found" });
 
     const resetToken = crypto.randomBytes(32).toString("hex");
-    user.passwordResetToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+    user.passwordResetToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
     user.passwordResetExpires = Date.now() + 10 * 60 * 1000;
     await user.save();
 
@@ -96,7 +102,10 @@ const AuthController = {
     if (!user) return res.status(400).json({ error: "Invalid request" });
 
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-    if (hashedToken !== user.passwordResetToken || user.passwordResetExpires < Date.now()) {
+    if (
+      hashedToken !== user.passwordResetToken ||
+      user.passwordResetExpires < Date.now()
+    ) {
       return res.status(400).json({ error: "Invalid or expired reset token!" });
     }
 
@@ -109,7 +118,9 @@ const AuthController = {
   },
 
   me: async (req, res) => {
-    const user = await User.findById(req.user.userId).populate("defaultShippingAddress defaultBillingAddress");
+    const user = await req.user.populate(
+      "defaultShippingAddress defaultBillingAddress"
+    );
     res.json(user);
   },
 };
