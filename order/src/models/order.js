@@ -5,7 +5,7 @@ const OrderEventSchema = new mongoose.Schema({
     type: String,
     enum: [
       "PAYMENT_DONE",
-      "PENDING",
+      "PENDING", 
       "PACKING",
       "OUT_FOR_DELIVERY",
       "DELIVERED",
@@ -23,7 +23,15 @@ const OrderEventSchema = new mongoose.Schema({
 
 const OrderProductSchema = new mongoose.Schema({
   productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
+  name: { type: String, required: true },
+  price: { type: Number, required: true },
   quantity: { type: Number, required: true, min: 1 },
+  // Added color details
+  color: {
+    colorId: { type: mongoose.Schema.Types.ObjectId, ref: "Color" },
+    name: { type: String },
+    hexCode: { type: String }
+  }
 });
 
 const OrderSchema = new mongoose.Schema(
@@ -35,12 +43,13 @@ const OrderSchema = new mongoose.Schema(
     discountPercentage: { type: Number, default: 0 },
     discountAmount: { type: Number, default: 0 },
     address: { type: String, required: true },
+    phoneNumber: { type: String, required: true },
     status: {
       type: String,
       enum: [
         "PAYMENT_DONE",
         "PENDING",
-        "PACKING",
+        "PACKING", 
         "OUT_FOR_DELIVERY",
         "DELIVERED",
         "CANCELLED",

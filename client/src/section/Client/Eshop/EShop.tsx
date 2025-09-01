@@ -3,14 +3,18 @@ import { showToastinfo } from "@/utils/toast/infoToast";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { FaSearch } from "react-icons/fa";
-import { IoCartOutline, IoFilterOutline, IoGridOutline, IoListOutline, IoHeartOutline } from "react-icons/io5";
+import { IoFilterOutline, IoGridOutline, IoHeartOutline, IoListOutline } from "react-icons/io5";
 import { MdClose } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 
 interface Category {
-  id: number;
+  _id: string;  // Changed from id: number to _id: string
   name: string;
-  _count: { products: number };
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+  
 }
 
 const ITEMS_PER_PAGE = 12;
@@ -25,7 +29,7 @@ export default function EShop() {
   const [loading, setLoading] = useState(true);
   
   // Filter states
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);  // Changed to string
   const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({ min: 0, max: 10000 });
   const [sortBy, setSortBy] = useState<string>("newest");
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -38,11 +42,18 @@ export default function EShop() {
   // Fetch categories
   const fetchFiltersData = async () => {
     try {
-      const categoriesRes = await axios.get("http://localhost:5000/api/categories");
+      const categoriesRes = await axios.get("http://localhost:3001/category");
       setCategories(categoriesRes.data);
     } catch (error) {
       console.error("Error fetching filters data:", error);
     }
+  };
+
+  // Function to count products by category
+  const getProductCountForCategory = (categoryId: string) => {
+    return products.filter(product => 
+      product.category && product.category._id === categoryId
+    ).length;
   };
 
   // Fetch products with filters
@@ -55,33 +66,33 @@ export default function EShop() {
       params.append('skip', ((currentPage - 1) * ITEMS_PER_PAGE).toString());
       params.append('take', ITEMS_PER_PAGE.toString());
 
-      const response = await axios.get(`http://localhost:5000/api/products?${params}`);
+      const response = await axios.get(`http://localhost:3001/products?${params}`);
       
       let productsData = response.data.data || response.data;
       setTotalProducts(response.data.count || productsData.length);
       
       // Apply search filter
       if (searchTerm.trim()) {
-        productsData = productsData.filter((product: Product) =>
+        productsData = productsData.filter((product: any) =>
           product.name?.toLowerCase().includes(searchTerm.toLowerCase())
         );
       }
       
       // Apply price filter
-      productsData = productsData.filter((product: Product) =>
+      productsData = productsData.filter((product: any) =>
         Number(product.price) >= priceRange.min && Number(product.price) <= priceRange.max
       );
       
       // Apply sorting
       switch (sortBy) {
         case 'price-low':
-          productsData.sort((a: Product, b: Product) => Number(a.price) - Number(b.price));
+          productsData.sort((a: any, b: any) => Number(a.price) - Number(b.price));
           break;
         case 'price-high':
-          productsData.sort((a: Product, b: Product) => Number(b.price) - Number(a.price));
+          productsData.sort((a: any, b: any) => Number(b.price) - Number(a.price));
           break;
         case 'name':
-          productsData.sort((a: Product, b: Product) => a.name.localeCompare(b.name));
+          productsData.sort((a: any, b: any) => a.name.localeCompare(b.name));
           break;
         case 'newest':
         default:
@@ -120,8 +131,8 @@ export default function EShop() {
   }, [searchTerm, products, priceRange]);
 
   // Updated function to navigate to product details
-  const handleProductClick = (product: Product) => {
-    navigate(`/product/${product.id}`);
+  const handleProductClick = (product: any) => {
+    navigate(`/product/${product._id}`);  // Changed to use _id
   };
 
   const clearFilters = () => {
@@ -237,19 +248,19 @@ export default function EShop() {
                   <span className="text-sm text-gray-700">All Categories</span>
                 </label>
                 {categories.map((category) => (
-                  <label key={category.id} className="flex items-center justify-between">
+                  <label key={category._id} className="flex items-center justify-between">
                     <div className="flex items-center">
                       <input
                         type="radio"
                         name="category"
-                        checked={selectedCategory === category.id}
-                        onChange={() => setSelectedCategory(category.id)}
+                        checked={selectedCategory === category._id}
+                        onChange={() => setSelectedCategory(category._id)}
                         className="mr-3 text-blue-600"
                       />
                       <span className="text-sm text-gray-700">{category.name}</span>
                     </div>
                     <span className="px-2 py-1 text-xs text-gray-500 bg-gray-100 rounded">
-                      {category._count.products}
+                      {getProductCountForCategory(category._id)}
                     </span>
                   </label>
                 ))}
@@ -296,7 +307,7 @@ export default function EShop() {
                   <span className="text-sm text-gray-600">Active filters:</span>
                   {selectedCategory && (
                     <span className="inline-flex items-center gap-1 px-3 py-1 text-sm text-blue-800 bg-blue-100 rounded-full">
-                      {categories.find(c => c.id === selectedCategory)?.name}
+                      {categories.find(c => c._id === selectedCategory)?.name}
                       <MdClose 
                         className="rounded-full cursor-pointer hover:bg-blue-200"
                         onClick={() => setSelectedCategory(null)}
@@ -320,8 +331,8 @@ export default function EShop() {
                   ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
                   : 'grid-cols-1'}`}
                 >
-                  {filteredProducts.map((product) => (
-                    <div key={product.id} className={`bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group border border-gray-100 cursor-pointer ${
+                  {filteredProducts.map((product: any) => (
+                    <div key={product._id} className={`bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group border border-gray-100 cursor-pointer ${
                       viewMode === 'list' ? 'flex' : ''
                     }`}>
                       <div 

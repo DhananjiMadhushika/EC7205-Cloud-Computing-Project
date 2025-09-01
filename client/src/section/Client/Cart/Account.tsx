@@ -103,9 +103,9 @@ export default function Account() {
         return;
       }
       const response = await axios.get(
-        "http://localhost:5000/api/users/address",
+        "http://localhost:3000/users/address",
         {
-          headers: { Authorization: token },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
       setAddresses(response.data);
@@ -123,9 +123,9 @@ export default function Account() {
       }
       const userId = sessionStorage.getItem("userID");
       const response = await axios.get(
-        `http://localhost:5000/api/users/${userId}`,
+        `http://localhost:3000/users/${userId}`,
         {
-          headers: { Authorization: token },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
       setUser(response.data);
@@ -143,8 +143,8 @@ export default function Account() {
         showToastError("Please log in to view your orders");
         return;
       }
-      const response = await axios.get("http://localhost:5000/api/orders", {
-        headers: { Authorization: token },
+      const response = await axios.get("http://localhost:3002/orders", {
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       const parsedOrders = response.data.map((order: any) => ({
@@ -171,7 +171,7 @@ export default function Account() {
       const response = await axios.get(
         `http://localhost:5000/api/reviews/order/${orderId}`,
         {
-          headers: { Authorization: token },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
       console.log("reviews:", response);
@@ -213,10 +213,10 @@ export default function Account() {
         return;
       }
       const response = await axios.post(
-        "http://localhost:5000/api/users/address",
+        "http://localhost:3000/users/address",
         form,
         {
-          headers: { Authorization: token },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
       console.log(response);
@@ -232,8 +232,8 @@ export default function Account() {
   const handleDeleteAddress = async (id: number) => {
     try {
       const token = sessionStorage.getItem("authToken");
-      await axios.delete(`http://localhost:5000/api/users/address/${id}`, {
-        headers: { Authorization: token },
+      await axios.delete(`http://localhost:3000/users/address/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
       fetchAddresses();
       showToastSuccess("Address deleted successfully");
@@ -246,12 +246,12 @@ export default function Account() {
     try {
       const token = sessionStorage.getItem("authToken");
       await axios.put(
-        "http://localhost:5000/api/users",
+        "http://localhost:3000/users",
         {
           defaultShippingAddress: Number(defaultShipping),
         },
         {
-          headers: { Authorization: token },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
       showToastSuccess("Default address updated");
@@ -282,10 +282,10 @@ export default function Account() {
       setIsUpdatingPhone(true);
       const token = sessionStorage.getItem("authToken");
       const response = await axios.put(
-        "http://localhost:5000/api/users",
+        "http://localhost:3000/users",
         { phoneNumber },
         {
-          headers: { Authorization: token },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
       setUser(response.data);
@@ -344,13 +344,13 @@ export default function Account() {
         response = await axios.put(
           `http://localhost:5000/api/reviews/${review.id}`,
           review,
-          { headers: { Authorization: token } }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
       } else {
         response = await axios.post(
           "http://localhost:5000/api/reviews",
           review,
-          { headers: { Authorization: token } }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
       }
 
@@ -418,16 +418,16 @@ export default function Account() {
   };
 
   return (
-    <div className="bg-gray-400 bg-opacity-10 backdrop-blur-lg min-h-screen">
+    <div className="min-h-screen bg-gray-400 bg-opacity-10 backdrop-blur-lg">
       <div className="mt-16 md:mt-20">
-        <div className="container mx-auto p-4 lg:p-8">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-            <div className="lg:col-span-1 bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-3xl sm:text-4xl text-center font-anton text-green-800 mb-4">
+        <div className="container p-4 mx-auto lg:p-8">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
+            <div className="p-6 bg-white rounded-lg shadow-md lg:col-span-1">
+              <h2 className="mb-4 text-3xl text-center text-green-800 sm:text-4xl font-anton">
                 User Profile
               </h2>
               {user ? (
-                <div className="space-y-5 mt-6">
+                <div className="mt-6 space-y-5">
                   <div>
                     <p className="text-sm text-gray-600">Name</p>
                     <p className="text-base font-medium text-gray-800">
@@ -480,17 +480,17 @@ export default function Account() {
                             }
                           }}
                           placeholder="Enter your phone number"
-                          className="p-2 w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
+                          className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                         />
                         {phoneError && (
-                          <p className="text-sm text-red-500 mt-1">
+                          <p className="mt-1 text-sm text-red-500">
                             {phoneError}
                           </p>
                         )}
                         <button
                           onClick={handleUpdatePhoneNumber}
                           disabled={isUpdatingPhone}
-                          className="mt-2 w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition-colors"
+                          className="w-full py-2 mt-2 text-white transition-colors bg-green-500 rounded-lg hover:bg-green-600"
                         >
                           {isUpdatingPhone
                             ? "Updating..."
@@ -498,7 +498,7 @@ export default function Account() {
                         </button>
                         <button
                           onClick={() => setIsEditingPhone(false)}
-                          className="mt-2 w-full bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600 transition-colors"
+                          className="w-full py-2 mt-2 text-white transition-colors bg-gray-500 rounded-lg hover:bg-gray-600"
                         >
                           Cancel
                         </button>
@@ -507,7 +507,7 @@ export default function Account() {
                   </div>
                   {!user.phoneNumber && (
                     <div>
-                      <p className="text-sm text-gray-600 mb-2">
+                      <p className="mb-2 text-sm text-gray-600">
                         Add your phone number
                       </p>
                       <input
@@ -520,17 +520,17 @@ export default function Account() {
                           }
                         }}
                         placeholder="Enter your phone number"
-                        className="p-2 w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                       />
                       {phoneError && (
-                        <p className="text-sm text-red-500 mt-1">
+                        <p className="mt-1 text-sm text-red-500">
                           {phoneError}
                         </p>
                       )}
                       <button
                         onClick={handleUpdatePhoneNumber}
                         disabled={isUpdatingPhone}
-                        className="mt-2 w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition-colors"
+                        className="w-full py-2 mt-2 text-white transition-colors bg-green-500 rounded-lg hover:bg-green-600"
                       >
                         {isUpdatingPhone ? "Updating..." : "Add Phone Number"}
                       </button>
@@ -544,23 +544,23 @@ export default function Account() {
 
             <div className="lg:col-span-3">
               {/* Order History Section */}
-              <div className="bg-white rounded-lg shadow-md p-6 mb-4">
-                <h2 className="text-xl font-bold text-gray-800 mb-4">
+              <div className="p-6 mb-4 bg-white rounded-lg shadow-md">
+                <h2 className="mb-4 text-xl font-bold text-gray-800">
                   Order History
                 </h2>
 
                 {isLoadingOrders ? (
                   <div className="flex justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+                    <div className="w-8 h-8 border-b-2 border-green-500 rounded-full animate-spin"></div>
                   </div>
                 ) : orders.length > 0 ? (
                   <div className="space-y-4">
                     {orders.map((order) => (
                       <div
                         key={order.id}
-                        className="border border-gray-200 rounded-lg p-4"
+                        className="p-4 border border-gray-200 rounded-lg"
                       >
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3">
+                        <div className="flex flex-col items-start justify-between mb-3 md:flex-row md:items-center">
                           <div>
                             <p className="text-sm text-gray-600">
                               Order #{order.id} • {formatDate(order.createdAt)}
@@ -569,7 +569,7 @@ export default function Account() {
                               Rs.{formatCurrency(order.netAmount)}
                             </p>
                           </div>
-                          <div className="mt-2 md:mt-0 flex items-center">
+                          <div className="flex items-center mt-2 md:mt-0">
                             <span
                               className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
                                 order.status
@@ -580,7 +580,7 @@ export default function Account() {
                             {order.status === "DELIVERED" && (
                               <button
                                 onClick={() => openReviewModal(order)}
-                                className="ml-3 bg-green-500 text-white px-3 py-1 rounded-lg text-xs font-medium hover:bg-green-600 transition-colors"
+                                className="px-3 py-1 ml-3 text-xs font-medium text-white transition-colors bg-green-500 rounded-lg hover:bg-green-600"
                               >
                                 Review
                               </button>
@@ -593,22 +593,22 @@ export default function Account() {
                             order.products.map((item) => (
                               <div
                                 key={item.id}
-                                className="flex items-center text-sm py-2 border-t border-gray-100"
+                                className="flex items-center py-2 text-sm border-t border-gray-100"
                               >
-                                <div className="flex-shrink-0 w-16 h-16 bg-gray-100 rounded-md overflow-hidden">
+                                <div className="flex-shrink-0 w-16 h-16 overflow-hidden bg-gray-100 rounded-md">
                                   {item.product && item.product.productImage ? (
                                     <img
                                       src={item.product.productImage}
                                       alt={item.product.name}
-                                      className="w-full h-full object-cover"
+                                      className="object-cover w-full h-full"
                                     />
                                   ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                    <div className="flex items-center justify-center w-full h-full text-gray-400">
                                       No image
                                     </div>
                                   )}
                                 </div>
-                                <div className="ml-4 flex-grow">
+                                <div className="flex-grow ml-4">
                                   <p className="font-medium">
                                     {item.product
                                       ? item.product.name
@@ -631,7 +631,7 @@ export default function Account() {
                               </div>
                             ))
                           ) : (
-                            <div className="text-center py-2 text-gray-500">
+                            <div className="py-2 text-center text-gray-500">
                               No products in this order
                             </div>
                           )}
@@ -644,7 +644,7 @@ export default function Account() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-6">
+                  <div className="py-6 text-center">
                     <p className="text-gray-600">
                       You haven't placed any orders yet.
                     </p>
@@ -653,11 +653,11 @@ export default function Account() {
               </div>
 
               {/* Add New Address Section */}
-              <div className="bg-white rounded-lg shadow-md p-6 mb-4">
-                <h2 className="text-xl font-bold text-gray-800 mb-4">
+              <div className="p-6 mb-4 bg-white rounded-lg shadow-md">
+                <h2 className="mb-4 text-xl font-bold text-gray-800">
                   Add New Address
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
                       Line One
@@ -667,7 +667,7 @@ export default function Account() {
                       onChange={(e) =>
                         setForm({ ...form, lineOne: e.target.value })
                       }
-                      className="mt-1 p-2 w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className="w-full p-2 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                     />
                   </div>
                   <div>
@@ -679,7 +679,7 @@ export default function Account() {
                       onChange={(e) =>
                         setForm({ ...form, lineTwo: e.target.value })
                       }
-                      className="mt-1 p-2 w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className="w-full p-2 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                     />
                   </div>
                   <div>
@@ -691,7 +691,7 @@ export default function Account() {
                       onChange={(e) =>
                         setForm({ ...form, city: e.target.value })
                       }
-                      className="mt-1 p-2 w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className="w-full p-2 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                     />
                   </div>
                   <div>
@@ -703,7 +703,7 @@ export default function Account() {
                       onChange={(e) =>
                         setForm({ ...form, country: e.target.value })
                       }
-                      className="mt-1 p-2 w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className="w-full p-2 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                     />
                   </div>
                   <div>
@@ -715,21 +715,21 @@ export default function Account() {
                       onChange={(e) =>
                         setForm({ ...form, pinCode: e.target.value })
                       }
-                      className="mt-1 p-2 w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className="w-full p-2 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                     />
                   </div>
                 </div>
                 <button
                   onClick={handleAddAddress}
-                  className="mt-6 w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition-colors"
+                  className="w-full py-2 mt-6 text-white transition-colors bg-green-500 rounded-lg hover:bg-green-600"
                 >
                   Add Address
                 </button>
               </div>
 
               {/* Default Address Section */}
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">
+              <div className="p-6 bg-white rounded-lg shadow-md">
+                <h2 className="mb-4 text-xl font-semibold text-gray-800">
                   Default Address
                 </h2>
                 {addresses.length > 0 ? (
@@ -753,7 +753,7 @@ export default function Account() {
                         </p>
                         <button
                           onClick={() => handleDeleteAddress(address.id!)}
-                          className="mt-2 bg-red-500 text-white py-1 px-4 rounded-lg hover:bg-red-600 transition-colors"
+                          className="px-4 py-1 mt-2 text-white transition-colors bg-red-500 rounded-lg hover:bg-red-600"
                         >
                           Delete
                         </button>
@@ -772,9 +772,9 @@ export default function Account() {
 
         {/* Address Set Popup */}
         {showPopup && (
-          <div className="fixed inset-0 bg-gray-900 bg-opacity-60 flex justify-center items-center backdrop-blur-xl z-50">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-60 backdrop-blur-xl">
             <div className="bg-white p-6 rounded-xl shadow-xl w-[280px] sm:w-[340px] md:mb-32">
-              <h2 className="text-base md:text-lg font-bold mb-4 text-center">
+              <h2 className="mb-4 text-base font-bold text-center md:text-lg">
                 Set Your Address as Your Shipping Address Now!
               </h2>
               <div className="flex justify-center mt-8">
@@ -787,7 +787,7 @@ export default function Account() {
                       setSaveAddress(true);
                     }}
                     type="submit"
-                    className="px-6 py-2 text-sm md:text-base text-white bg-green-500 rounded-lg hover:bg-green-600 animate-bounce"
+                    className="px-6 py-2 text-sm text-white bg-green-500 rounded-lg md:text-base hover:bg-green-600 animate-bounce"
                   >
                     Set as Shipping
                   </button>
@@ -799,9 +799,9 @@ export default function Account() {
 
         {/* Save Address Popup */}
         {saveAddress && (
-          <div className="fixed inset-0 bg-gray-900 bg-opacity-60 flex justify-center items-center backdrop-blur-xl z-50">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-60 backdrop-blur-xl">
             <div className="bg-white p-6 rounded-xl shadow-xl w-[280px] sm:w-[340px] md:mb-32">
-              <h2 className="text-base md:text-lg font-bold mb-4 text-center">
+              <h2 className="mb-4 text-base font-bold text-center md:text-lg">
                 Save your address as Default Shipping Address
               </h2>
               <div className="flex justify-center mt-8">
@@ -811,7 +811,7 @@ export default function Account() {
                     setSaveAddress(false);
                   }}
                   type="submit"
-                  className="px-6 py-2 text-sm md:text-base text-white bg-gray-500 rounded-lg hover:bg-gray-600 animate-bounce"
+                  className="px-6 py-2 text-sm text-white bg-gray-500 rounded-lg md:text-base hover:bg-gray-600 animate-bounce"
                 >
                   Save Default Address
                 </button>
@@ -823,9 +823,9 @@ export default function Account() {
         {/* Review Modal */}
         {/* Review Modal */}
         {showReviewModal && selectedOrder && (
-          <div className="fixed inset-0 bg-gray-900 bg-opacity-60 flex justify-center items-center backdrop-blur-xl z-50">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-60 backdrop-blur-xl">
             <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold">Review Your Purchase</h2>
                 <button
                   onClick={closeReviewModal}
@@ -833,7 +833,7 @@ export default function Account() {
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6"
+                    className="w-6 h-6"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -848,7 +848,7 @@ export default function Account() {
                 </button>
               </div>
 
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="mb-4 text-sm text-gray-600">
                 Order #{selectedOrder.id} •{" "}
                 {formatDate(selectedOrder.createdAt)}
               </p>
@@ -866,23 +866,23 @@ export default function Account() {
                     return (
                       <div
                         key={item.id}
-                        className="border border-gray-200 rounded-lg p-4"
+                        className="p-4 border border-gray-200 rounded-lg"
                       >
                         <div className="flex items-start">
-                          <div className="flex-shrink-0 w-16 h-16 bg-gray-100 rounded-md overflow-hidden">
+                          <div className="flex-shrink-0 w-16 h-16 overflow-hidden bg-gray-100 rounded-md">
                             {item.product.productImage ? (
                               <img
                                 src={item.product.productImage}
                                 alt={item.product.name}
-                                className="w-full h-full object-cover"
+                                className="object-cover w-full h-full"
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-gray-400">
+                              <div className="flex items-center justify-center w-full h-full text-gray-400">
                                 No image
                               </div>
                             )}
                           </div>
-                          <div className="ml-4 flex-grow">
+                          <div className="flex-grow ml-4">
                             <p className="font-medium">{item.product.name}</p>
                             <p className="text-sm text-gray-600">
                               Qty: {item.quantity}
@@ -891,7 +891,7 @@ export default function Account() {
                         </div>
 
                         <div className="mt-4">
-                          <p className="font-medium mb-2">Your Rating</p>
+                          <p className="mb-2 font-medium">Your Rating</p>
                           <div className="flex items-center mb-3">
                             {[1, 2, 3, 4, 5].map((star) => (
                               <button
@@ -903,7 +903,7 @@ export default function Account() {
                                     star
                                   )
                                 }
-                                className="text-2xl mr-1 focus:outline-none"
+                                className="mr-1 text-2xl focus:outline-none"
                               >
                                 {star <= review.rating ? "★" : "☆"}
                               </button>
@@ -911,7 +911,7 @@ export default function Account() {
                           </div>
 
                           <div className="mb-3">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label className="block mb-1 text-sm font-medium text-gray-700">
                               Your Review
                             </label>
                             <textarea
@@ -924,7 +924,7 @@ export default function Account() {
                                 )
                               }
                               placeholder="Share your thoughts about this product..."
-                              className="p-2 w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
+                              className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                               rows={3}
                             />
                           </div>
@@ -932,7 +932,7 @@ export default function Account() {
                           <button
                             onClick={() => submitReview(item.productId)}
                             disabled={isSubmittingReview}
-                            className="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-colors"
+                            className="px-4 py-2 text-white transition-colors bg-green-500 rounded-lg hover:bg-green-600"
                           >
                             {review.id ? "Update Review" : "Submit Review"}
                           </button>
@@ -941,7 +941,7 @@ export default function Account() {
                     );
                   })
                 ) : (
-                  <p className="text-center py-4">
+                  <p className="py-4 text-center">
                     No products found in this order.
                   </p>
                 )}
@@ -950,21 +950,21 @@ export default function Account() {
           </div>
         )}
         {/* {showReviewModal && selectedOrder && (
-          <div className="fixed inset-0 bg-gray-900 bg-opacity-60 flex justify-center items-center backdrop-blur-xl z-50">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-60 backdrop-blur-xl">
             <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold">Review Your Purchase</h2>
                 <button 
                   onClick={closeReviewModal}
                   className="text-gray-500 hover:text-gray-700"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
               
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="mb-4 text-sm text-gray-600">
                 Order #{selectedOrder.id} • {formatDate(selectedOrder.createdAt)}
               </p>
               
@@ -978,35 +978,35 @@ export default function Account() {
                   };
                   
                   return (
-                    <div key={item.id} className="border border-gray-200 rounded-lg p-4">
+                    <div key={item.id} className="p-4 border border-gray-200 rounded-lg">
                       <div className="flex items-start">
-                        <div className="flex-shrink-0 w-16 h-16 bg-gray-100 rounded-md overflow-hidden">
+                        <div className="flex-shrink-0 w-16 h-16 overflow-hidden bg-gray-100 rounded-md">
                           {item.product.productImage ? (
                             <img 
                               src={item.product.productImage} 
                               alt={item.product.name} 
-                              className="w-full h-full object-cover"
+                              className="object-cover w-full h-full"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-400">
+                            <div className="flex items-center justify-center w-full h-full text-gray-400">
                               No image
                             </div>
                           )}
                         </div>
-                        <div className="ml-4 flex-grow">
+                        <div className="flex-grow ml-4">
                           <p className="font-medium">{item.product.name}</p>
                           <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
                         </div>
                       </div>
                       
                       <div className="mt-4">
-                      <p className="font-medium mb-2">Your Rating</p>
+                      <p className="mb-2 font-medium">Your Rating</p>
                         <div className="flex items-center mb-3">
                           {[1, 2, 3, 4, 5].map((star) => (
                             <button
                               key={star}
                               onClick={() => handleReviewChange(item.productId, "rating", star)}
-                              className="text-2xl mr-1 focus:outline-none"
+                              className="mr-1 text-2xl focus:outline-none"
                             >
                               {star <= review.rating ? "★" : "☆"}
                             </button>
@@ -1014,14 +1014,14 @@ export default function Account() {
                         </div>
                         
                         <div className="mb-3">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block mb-1 text-sm font-medium text-gray-700">
                             Your Review
                           </label>
                           <textarea
                             value={review.comment}
                             onChange={(e) => handleReviewChange(item.productId, "comment", e.target.value)}
                             placeholder="Share your thoughts about this product..."
-                            className="p-2 w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
+                            className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                             rows={3}
                           />
                         </div>
@@ -1029,7 +1029,7 @@ export default function Account() {
                         <button
                           onClick={() => submitReview(item.productId)}
                           disabled={isSubmittingReview}
-                          className="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-colors"
+                          className="px-4 py-2 text-white transition-colors bg-green-500 rounded-lg hover:bg-green-600"
                         >
                           {review.id ? "Update Review" : "Submit Review"}
                         </button>

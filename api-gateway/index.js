@@ -14,11 +14,22 @@ app.use("/products", (req, res) => {
   proxy.web(req, res, { target: "http://product:3001" });
 });
 
-// app.use("/colors", (req, res) => {
-//   proxy.web(req, res, { target: "http://product:3001" });
-// });
+// Route requests to colors (through product service)
+app.use("/colors", (req, res) => {
+  proxy.web(req, res, { target: "http://product:3001" });
+});
 
-// Route requests to the order service
+// Route requests to categories (through product service)
+app.use("/category", (req, res) => {
+  proxy.web(req, res, { target: "http://product:3001" });
+});
+
+// Route cart requests to order service
+app.use("/cart", (req, res) => {
+  proxy.web(req, res, { target: "http://order:3002" });
+});
+
+// Route order requests to order service
 app.use("/orders", (req, res) => {
   proxy.web(req, res, { target: "http://order:3002" });
 });

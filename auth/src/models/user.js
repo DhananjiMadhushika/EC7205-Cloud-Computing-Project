@@ -8,6 +8,8 @@ const UserSchema = new mongoose.Schema(
     phoneNumber: { type: String, default: "" },
     userImage: { type: String },
     role: { type: String, enum: ["ADMIN", "USER"], default: "USER" },
+    // Add the addresses field that your code expects
+    addresses: [{ type: mongoose.Schema.Types.ObjectId, ref: "Address" }],
     defaultShippingAddress: { type: mongoose.Schema.Types.ObjectId, ref: "Address" },
     defaultBillingAddress: { type: mongoose.Schema.Types.ObjectId, ref: "Address" },
     passwordResetToken: { type: String, unique: false },

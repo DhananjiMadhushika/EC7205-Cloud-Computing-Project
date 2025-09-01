@@ -1,230 +1,170 @@
+import React, { useState, useEffect } from 'react';
 import { Product } from "@/types/ProductType";
 import { showToastError } from "@/utils/toast/errToast";
 import { showToastSuccess } from "@/utils/toast/successToast";
 import axios from "axios";
-import React, { useEffect, useState } from "react";
-import { CgClose } from "react-icons/cg";
-import { useNavigate } from "react-router-dom";
 
-type QuantityPopupProps = {
-  isOpen: boolean;
-  setIsOpen: (value: boolean) => void;
+interface QuantityPopupProps {
   product: Product | null;
-  cartItemId?: number | null; 
-  onUpdateCart?: () => void;
-};
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+  cartItemId: string | null;
+  onUpdateCart: () => void;
+}
 
-export const QuantityPopup: React.FC<QuantityPopupProps> = ({
-  isOpen,
-  setIsOpen,
-  product,
-  cartItemId,
-  onUpdateCart,
-}) => {
-  const [isScrollDown, setIsScrollDown] = useState(false);
+export function QuantityPopup({ product, isOpen, setIsOpen, cartItemId, onUpdateCart }: QuantityPopupProps) {
   const [quantity, setQuantity] = useState(1);
-  const navigate = useNavigate();
+  const [selectedColor, setSelectedColor] = useState<any | null>(null);
+  const [updating, setUpdating] = useState(false);
 
-  const handleAddToCart = async (productId: any, quantity: any) => {
-    try {
-      const token = sessionStorage.getItem("authToken");
-      if (!token) {
-        showToastError("Please log in to add items to the cart");
-        return;
-      }
-
-      // Check if quantity exceeds available stock
-      if (product && quantity > (product.adminStock ?? 0)) {
-        showToastError(`Only ${product.adminStock} items available in stock`);
-        return;
-      }
-
-      if (cartItemId) {
-        // Update existing cart item
-        const response = await axios.put(
-          `http://localhost:5000/api/cart/${cartItemId}`,
-          { quantity: Number(quantity) },
-          {
-            headers: {
-              Authorization: token,
-            },
-          }
-        );
-        console.log("Product updated!", response);
-        showToastSuccess("Cart updated successfully!");
-      } else {
-        // Add new item to cart
-        const response = await axios.post(
-          "http://localhost:5000/api/cart",
-          {
-            productId: Number(productId),
-            quantity: Number(quantity),
-          },
-          {
-            headers: {
-              Authorization: token,
-            },
-          }
-        );
-        console.log("Product added to cart!", response);
-        showToastSuccess("Product added to cart!");
-      }
-      
-      setIsOpen(false);
-      if (onUpdateCart) {
-        onUpdateCart();
-      }
-      navigate("/cart");
-    } catch (error: any) {
-      console.error("Error updating cart:", error);
-      const errorMessage = error.response?.data?.message || "Failed to update cart. Please try again.";
-      showToastError(errorMessage);
-    }
-  };
-
-  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newQuantity = parseInt(e.target.value) || 1;
-    setQuantity(newQuantity);
-  };
-
-  const handleScroll = () => {
-    setIsScrollDown((prev) => !prev);
-    setIsOpen(false);
-  };
-
-  // Reset quantity when popup opens
   useEffect(() => {
-    if (isOpen) {
-      setQuantity(1);
-      document.body.style.overflow = "hidden";
+    if (product?.colors && product.colors.length > 0) {
+      setSelectedColor(product.colors[0]);
+    }
+  }, [product]);
+
+  const handleUpdate = async () => {
+    if (!cartItemId) return;
+    
+    if (product?.colors && product.colors.length > 0 && !selectedColor) {
+      showToastError("Please select a color");
+      return;
     }
 
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
+    setUpdating(true);
+    const token = sessionStorage.getItem("authToken");
+    
+    try {
+      const updateData: any = { quantity };
+      
+      if (selectedColor) {
+        updateData.color = {
+          colorId: selectedColor._id,
+          name: selectedColor.name,
+          hexCode: selectedColor.hexCode
+        };
+      }
+
+      await axios.put(
+        `http://localhost:3002/cart/${cartItemId}`,
+        updateData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      showToastSuccess("Cart item updated successfully");
+      onUpdateCart();
+      setIsOpen(false);
+    } catch (error) {
+      console.error("Failed to update cart item:", error);
+      showToastError("Failed to update cart item");
+    } finally {
+      setUpdating(false);
+    }
+  };
 
   if (!isOpen || !product) return null;
 
-  const maxQuantity = product.adminStock ?? 0;
-  const isOutOfStock = maxQuantity === 0;
-  const isLargeOrder = quantity > 100;
-
   return (
-    <div>
-      <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm">
-        <div
-          className={`fixed backdrop-blur-[117px] left-[50%] top-[60%] sm-425:top-[50%] translate-x-[-50%] translate-y-[-50%] w-full h-[486px] sm-425:w-[340px] sm-525:w-[400px] sm-425:h-[475px] sm-525:h-[540px] sm-425:rounded-[40px] rounded-t-[40px] bg-[#262626] transform ${
-            isScrollDown ? "translate-y-0" : ""
-          } transition-transform duration-500 ease-in-out`}
-        >
-          {/* horizontal bar */}
-          <button
-            className={`flex sm-425:hidden justify-center w-full mt-4 mb-6`}
-            onClick={handleScroll}
-          >
-            <hr className="flex h-[3px] w-[79px] bg-white/70 border-none"></hr>
-          </button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-5 bg-black bg-opacity-50 backdrop-blur-sm">
+      <div className="p-6 bg-white rounded-xl w-[400px] max-w-full">
+        <h2 className="mb-4 text-xl font-semibold text-gray-800">
+          Update {product.name}
+        </h2>
 
-          {/* close icon */}
-          <div className="justify-end hidden pr-6 mt-6 cursor-pointer sm-425:flex sm:pr-7">
-            <CgClose size={18} color="white" onClick={() => setIsOpen(false)} />
-          </div>
-
-          <div className="flex flex-col items-center pb-5 mx-8">
-            {/* title */}
-            <h1 className="flex mb-4 text-xl font-bold text-center text-white capitalize sm:text-2xl">
-              {product.name}
-            </h1>
-
-            {/* image container */}
-            <div className="flex border border-gray-300 p-3 sm-525:p-4 rounded-xl bg-[#5e606367]/50">
-              <div className="flex w-[200px] h-[185px] sm-525:h-56">
-                <img
-                  src={product.productImage}
-                  alt={product.name}
-                  className="object-contain w-full h-auto"
-                />
-              </div>
-            </div>
-
-            {/* Stock status */}
-            <div className="mt-3 text-center">
-              <p className={`text-sm font-medium ${
-                maxQuantity > 0 ? "text-green-400" : "text-red-400"
-              }`}>
-                {maxQuantity > 0 ? `${maxQuantity} items in stock` : "Out of Stock"}
-              </p>
-              <p className="mt-1 text-sm text-white/70">
-                Price: {product.price} LKR
-              </p>
-            </div>
-
-            {/* enter quantity field */}
-            {!isOutOfStock && (
-              <div className="flex flex-col w-9/12 gap-2 mt-5">
-                <label className="block text-sm font-medium text-nowrap md:text-base text-white/70">
-                  Enter Quantity:
+        {/* Color Selection */}
+        {product.colors && product.colors.length > 0 && (
+          <div className="mb-4">
+            <h3 className="mb-3 text-sm font-semibold text-gray-700">
+              Select Color
+            </h3>
+            <div className="grid grid-cols-1 gap-2">
+              {product.colors.map((color: any) => (
+                <label
+                  key={color._id}
+                  className={`flex items-center p-3 space-x-3 border-2 rounded-lg cursor-pointer transition-all ${
+                    selectedColor?._id === color._id
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="color"
+                    value={color._id}
+                    checked={selectedColor?._id === color._id}
+                    onChange={() => setSelectedColor(color)}
+                    className="sr-only"
+                  />
+                  <div
+                    className="flex-shrink-0 w-5 h-5 border border-gray-300 rounded-full"
+                    style={{ backgroundColor: color.hexCode }}
+                  ></div>
+                  <span className="text-sm font-medium text-gray-700">
+                    {color.name}
+                  </span>
                 </label>
-
-                <input
-                  type="number"
-                  className="w-full py-1 px-2 border lg:border-2 border-black/70 rounded-[8px] focus:outline-none"
-                  value={quantity}
-                  onChange={handleQuantityChange}
-                  min={1}
-                  max={maxQuantity}
-                />
-                
-                {quantity > maxQuantity && (
-                  <p className="mt-1 text-xs text-red-400">
-                    Maximum available: {maxQuantity}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* Action buttons */}
-            <div className="mt-6">
-              {isOutOfStock ? (
-                <div className="text-center">
-                  <p className="mb-3 text-red-400">This item is currently out of stock</p>
-                  <a
-                    href="tel:+94xxxxxxxxx" // Replace with your store contact number
-                    className="flex items-center gap-2 px-5 py-2 text-base text-white capitalize border-2 border-gray-300 rounded-full hover:border-green-500 hover:bg-green-500 hover:text-white hover:font-semibold"
-                  >
-                    <img src="/client/product/call3.png" alt="Call" className="w-5 h-5 sm:w-6 sm:h-6" />
-                    Contact Store
-                  </a>
-                </div>
-              ) : isLargeOrder ? (
-                <a
-                  href="tel:+94xxxxxxxxx" // Replace with your store contact number
-                  className="flex items-center gap-2 px-5 py-2 text-base text-white capitalize border-2 border-gray-300 rounded-full hover:border-green-500 hover:bg-green-500 hover:text-white hover:font-semibold"
-                >
-                  <img src="/client/product/call3.png" alt="Call" className="w-5 h-5 sm:w-6 sm:h-6" />
-                  Contact for Bulk Order
-                </a>
-              ) : (
-                <button
-                  className="px-8 py-2 text-base text-white capitalize border-2 border-gray-300 rounded-full hover:border-green-500 hover:bg-green-500 hover:text-white hover:font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                  onClick={() => handleAddToCart(product.id, quantity)}
-                  disabled={quantity > maxQuantity || quantity < 1}
-                >
-                  {cartItemId ? "Update Cart" : "Add to Cart"}
-                </button>
-              )}
-            </div>
-
-            {/* Additional product info */}
-            <div className="mt-4 text-center">
-              <p className="text-xs text-white/60">
-                Total: {(parseFloat((product.price ?? 0).toString()) * quantity).toFixed(2)} LKR
-              </p>
+              ))}
             </div>
           </div>
+        )}
+
+        {/* Quantity Selection */}
+        <div className="mb-6">
+          <h3 className="mb-3 text-sm font-semibold text-gray-700">
+            Quantity
+          </h3>
+          <div className="flex items-center border border-gray-300 rounded-lg w-fit">
+            <button
+              onClick={() => setQuantity(Math.max(1, quantity - 1))}
+              className="px-3 py-2 text-gray-600 transition hover:text-gray-800"
+              disabled={quantity <= 1}
+            >
+              -
+            </button>
+            <input
+              type="number"
+              min="1"
+              max={product.stock || 1}
+              value={quantity}
+              onChange={(e) => setQuantity(Math.max(1, Math.min(product.stock || 1, parseInt(e.target.value) || 1)))}
+              className="w-16 px-3 py-2 text-center border-gray-300 border-x focus:outline-none"
+            />
+            <button
+              onClick={() => setQuantity(Math.min(product.stock || 1, quantity + 1))}
+              className="px-3 py-2 text-gray-600 transition hover:text-gray-800"
+              disabled={quantity >= (product.stock || 1)}
+            >
+              +
+            </button>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex justify-end space-x-3">
+          <button
+            onClick={() => setIsOpen(false)}
+            className="px-6 py-2 text-gray-600 transition-colors bg-gray-100 rounded-lg hover:bg-gray-200"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleUpdate}
+            disabled={updating}
+            className={`px-6 py-2 text-white rounded-lg transition-colors ${
+              updating
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-blue-600 hover:bg-blue-700'
+            }`}
+          >
+            {updating ? 'Updating...' : 'Update'}
+          </button>
         </div>
       </div>
     </div>
   );
-};
+}

@@ -1,5 +1,6 @@
-import { Product } from "@/types/ProductType";
 import { showToastinfo } from "@/utils/toast/infoToast";
+import { showToastSuccess } from "@/utils/toast/successToast";
+import { showToastError } from "@/utils/toast/errToast";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -7,27 +8,27 @@ import { useNavigate, useParams } from "react-router-dom";
 export default function ProductDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string>("");
   const [quantity, setQuantity] = useState(1);
-  const [selectedColorId, setSelectedColorId] = useState<number | null>(null); // New state for selected color
+  const [selectedColor, setSelectedColor] = useState<any | null>(null);
+  const [addingToCart, setAddingToCart] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`http://localhost:5000/api/products/${id}`);
+        const response = await axios.get(`http://localhost:3001/products/${id}`);
         setProduct(response.data);
         setSelectedImage(response.data.productImage);
         
-        // Auto-select first color if available
         if (response.data.colors && response.data.colors.length > 0) {
-          setSelectedColorId(response.data.colors[0].color.id);
+          setSelectedColor(response.data.colors[0]);
         }
       } catch (error) {
         console.error("Error fetching product:", error);
-        showToastinfo("Product not found");
+        showToastError("Product not found");
         navigate("/e-shop");
       } finally {
         setLoading(false);
@@ -43,44 +44,85 @@ export default function ProductDetails() {
     const token = sessionStorage.getItem("authToken");
     if (!token) {
       navigate("/");
-      showToastinfo("Please log in first to add items to cart.");
+      showToastError("Please log in first to add items to cart.");
       return;
     }
 
-    // Check if color selection is required
-    if (product?.colors && product.colors.length > 0 && !selectedColorId) {
-      showToastinfo("Please select a color before adding to cart.");
+    if (product?.colors && product.colors.length > 0 && !selectedColor) {
+      showToastError("Please select a color before adding to cart.");
+      return;
+    }
+
+    if (quantity > (product?.stock || 0)) {
+      showToastError("Selected quantity exceeds available stock.");
       return;
     }
     
+    setAddingToCart(true);
     try {
       const cartData = {
-        productId: product?.id,
+        productId: product._id,
         quantity: quantity,
-        colorId: selectedColorId // Include selected color
+        color: selectedColor ? {
+          colorId: selectedColor._id,
+          name: selectedColor.name,
+          hexCode: selectedColor.hexCode
+        } : null
       };
 
       const response = await axios.post(
-        "http://localhost:5000/api/cart",
+        "http://localhost:3002/cart",
         cartData,
         {
           headers: {
-            Authorization:token
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
           }
         }
       );
 
-      if(response.status === 200){
-        navigate("/cart");
+      if (response.status === 200) {
+        const colorText = selectedColor ? ` (${selectedColor.name})` : "";
+        showToastSuccess(`Added ${quantity} ${product?.name}${colorText} to cart`);
       }
-
-      const selectedColorName = product?.colors?.find(pc => pc.color.id === selectedColorId)?.color.name;
-      const colorText = selectedColorName ? ` (${selectedColorName})` : "";
-      
-      showToastinfo(`Added ${quantity} ${product?.name}${colorText} to cart`);
     } catch (error: any) {
       console.error("Error adding to cart:", error);
-      showToastinfo(error.response?.data?.message || "Failed to add item to cart");
+      
+      if (error.response?.status === 401) {
+        showToastError("Please log in again to add items to cart");
+        navigate("/");
+      } else if (error.response?.status === 400) {
+        showToastError(error.response.data.message || "Invalid request");
+      } else {
+        showToastError(error.response?.data?.message || "Failed to add item to cart");
+      }
+    } finally {
+      setAddingToCart(false);
+    }
+  };
+
+  const handleBuyNow = async () => {
+    const token = sessionStorage.getItem("authToken");
+    if (!token) {
+      navigate("/");
+      showToastError("Please log in first to make a purchase.");
+      return;
+    }
+
+    if (product?.colors && product.colors.length > 0 && !selectedColor) {
+      showToastError("Please select a color before purchasing.");
+      return;
+    }
+
+    if (quantity > (product?.stock || 0)) {
+      showToastError("Selected quantity exceeds available stock.");
+      return;
+    }
+
+    // Add to cart first, then navigate to cart for checkout
+    await handleAddToCart();
+    if (!addingToCart) {
+      navigate("/cart");
     }
   };
 
@@ -186,18 +228,18 @@ export default function ProductDetails() {
             </div>
           )}
 
-          {/* Available Colors - UPDATED SECTION */}
+          {/* Available Colors */}
           {product.colors && product.colors.length > 0 && (
             <div>
               <h3 className="mb-3 text-lg font-semibold text-gray-900">
                 Available Colors *
               </h3>
               <div className="grid grid-cols-2 gap-2">
-                {product.colors.map((productColor: any) => (
+                {product.colors.map((color: any) => (
                   <label
-                    key={productColor.color.id}
+                    key={color._id}
                     className={`flex items-center p-3 space-x-3 border-2 rounded-lg cursor-pointer transition-all ${
-                      selectedColorId === productColor.color.id
+                      selectedColor?._id === color._id
                         ? 'border-blue-500 bg-blue-50'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
@@ -205,17 +247,17 @@ export default function ProductDetails() {
                     <input
                       type="radio"
                       name="color"
-                      value={productColor.color.id}
-                      checked={selectedColorId === productColor.color.id}
-                      onChange={(e) => setSelectedColorId(parseInt(e.target.value))}
+                      value={color._id}
+                      checked={selectedColor?._id === color._id}
+                      onChange={() => setSelectedColor(color)}
                       className="sr-only"
                     />
                     <div
                       className="flex-shrink-0 w-6 h-6 border border-gray-300 rounded-full"
-                      style={{ backgroundColor: productColor.color.hexCode }}
+                      style={{ backgroundColor: color.hexCode }}
                     ></div>
                     <span className="text-sm font-medium text-gray-700">
-                      {productColor.color.name}
+                      {color.name}
                     </span>
                   </label>
                 ))}
@@ -299,14 +341,26 @@ export default function ProductDetails() {
             <div className="flex space-x-4">
               <button
                 onClick={handleAddToCart}
-                disabled={(product.stock ?? 0) === 0}
+                disabled={(product.stock ?? 0) === 0 || addingToCart}
                 className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all ${
-                  (product.stock ?? 0) > 0
+                  (product.stock ?? 0) > 0 && !addingToCart
                     ? 'bg-blue-600 text-white hover:bg-blue-700'
                     : 'bg-gray-400 text-gray-600 cursor-not-allowed'
                 }`}
               >
-                {(product.stock ?? 0) > 0 ? 'Add to Cart' : 'Out of Stock'}
+                {addingToCart ? 'Adding...' : (product.stock ?? 0) > 0 ? 'Add to Cart' : 'Out of Stock'}
+              </button>
+              
+              <button
+                onClick={handleBuyNow}
+                disabled={(product.stock ?? 0) === 0 || addingToCart}
+                className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all ${
+                  (product.stock ?? 0) > 0 && !addingToCart
+                    ? 'bg-green-600 text-white hover:bg-green-700'
+                    : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                }`}
+              >
+                {addingToCart ? 'Processing...' : (product.stock ?? 0) > 0 ? 'Buy Now' : 'Out of Stock'}
               </button>
               
               <button className="px-6 py-3 text-gray-700 transition border-2 border-gray-300 rounded-lg hover:border-gray-400">
@@ -317,59 +371,16 @@ export default function ProductDetails() {
             </div>
           </div>
 
-          {/* Product Reviews Section */}
-          {product.reviews && product.reviews.length > 0 && (
-            <div className="pt-6 border-t">
-              <h3 className="mb-4 text-lg font-semibold text-gray-900">
-                Customer Reviews ({product.reviews.length})
-              </h3>
-              <div className="space-y-4">
-                {product.reviews.slice(0, 3).map((review: any) => (
-                  <div key={review.id} className="p-4 border border-gray-200 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-gray-900">
-                        {review.user.name}
-                      </span>
-                      <div className="flex items-center">
-                        {[...Array(5)].map((_, i) => (
-                          <svg
-                            key={i}
-                            className={`w-4 h-4 ${
-                              i < review.rating ? 'text-yellow-400' : 'text-gray-300'
-                            }`}
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        ))}
-                      </div>
-                    </div>
-                    <p className="text-sm text-gray-600">
-                      {review.comment}
-                    </p>
-                  </div>
-                ))}
-                
-                {product.reviews.length > 3 && (
-                  <button className="text-sm font-medium text-blue-600 hover:text-blue-700">
-                    View all {product.reviews.length} reviews
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
+          {/* Back to Shop Button */}
+          <div className="mt-12 text-center">
+            <button
+              onClick={() => navigate("/e-shop")}
+              className="px-8 py-3 font-medium text-gray-700 transition bg-gray-100 rounded-lg hover:bg-gray-200"
+            >
+              ← Back to Shop
+            </button>
+          </div>
         </div>
-      </div>
-
-      {/* Back to Shop Button */}
-      <div className="mt-12 text-center">
-        <button
-          onClick={() => navigate("/e-shop")}
-          className="px-8 py-3 font-medium text-gray-700 transition bg-gray-100 rounded-lg hover:bg-gray-200"
-        >
-          ← Back to Shop
-        </button>
       </div>
     </div>
   );

@@ -1,14 +1,24 @@
 import { Router } from "express";
-import { addAddress, listAddress, deleteAddress, updateUser, changeUserRole, listNormalUsers, getUserById } from "../controllers/users.js";
+import {
+  addAddress,
+  changeUserRole,
+  deleteAddress,
+  getUserById,
+  listAddress,
+  listNormalUsers,
+  updateUser,
+} from "../controllers/users.js";
+import authMiddleware from "../middlewares/authMiddleware.js";
 
 const userRouter = Router();
 
-userRouter.post("/address", addAddress );
-userRouter.get("/address",  listAddress);
-userRouter.delete("/address/:id", deleteAddress);
-userRouter.put("/",  updateUser);
-userRouter.put("/:id/role",  changeUserRole);
-userRouter.get("/",  listNormalUsers);
-userRouter.get("/:id",  getUserById);
+// Add authMiddleware to all routes that need req.user
+userRouter.post("/address", authMiddleware, addAddress);
+userRouter.get("/address", authMiddleware, listAddress);           // Added authMiddleware
+userRouter.delete("/address/:id", authMiddleware, deleteAddress);  // Added authMiddleware
+userRouter.put("/", authMiddleware, updateUser);                   // Added authMiddleware
+userRouter.put("/:id/role", authMiddleware, changeUserRole);       // Added authMiddleware
+userRouter.get("/", authMiddleware, listNormalUsers);              // Added authMiddleware
+userRouter.get("/:id", authMiddleware, getUserById);
 
 export default userRouter;
