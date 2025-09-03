@@ -199,15 +199,15 @@ function ManageColors() {
                 <th className="px-6 py-3 font-semibold text-white">Color</th>
                 <th className="px-6 py-3 font-semibold text-white">Name</th>
                 <th className="px-6 py-3 font-semibold text-white">Hex Code</th>
-                <th className="px-6 py-3 font-semibold text-white">Products</th>
+              
                 <th className="px-6 py-3 font-semibold text-white">Status</th>
                 <th className="px-6 py-3 font-semibold text-white">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {colors.map((color) => (
+              {colors.map((color,index) => (
                 <tr key={color._id} className="border-b border-gray-700">
-                  <td className="px-6 py-4 text-white">{color._id}</td>
+                  <td className="px-6 py-4 text-white">{index+1}</td>
                   <td className="px-6 py-4">
                     <div
                       className="w-8 h-8 border-2 border-gray-400 rounded-full"
@@ -216,7 +216,7 @@ function ManageColors() {
                   </td>
                   <td className="px-6 py-4 font-medium text-white">{color.name}</td>
                   <td className="px-6 py-4 font-mono text-white">{color.hexCode}</td>
-                  <td className="px-6 py-4 text-white">{color._count?.products || 0}</td>
+                  
                   <td className="px-6 py-4">
                     <span
                       className={`px-2 py-1 rounded-full text-xs ${

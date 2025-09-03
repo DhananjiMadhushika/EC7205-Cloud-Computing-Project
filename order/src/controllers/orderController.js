@@ -2,6 +2,7 @@ import Order from "../models/order.js";
 import Cart from "../models/cart.js";
 import jwt from "jsonwebtoken";
 import axios from "axios";
+import MessageBroker from "../utils/messageBroker.js";
 
 const getUserFromToken = (req) => {
   const token = req.headers.authorization?.split(' ')[1];
@@ -13,14 +14,14 @@ const getUserFromToken = (req) => {
 export const createOrderFromCart = async (req, res) => {
   try {
     const user = getUserFromToken(req);
-    
-    // Get user's cart
+
+    // Get user's cart via HTTP
     const cart = await Cart.findOne({ userId: user.userId });
     if (!cart || cart.items.length === 0) {
       return res.status(400).json({ message: "Cart is empty" });
     }
 
-    // Get user details from auth service
+    // Get user details from auth service via HTTP
     const userResponse = await axios.get(`http://auth:3000/users/${user.userId}`, {
       headers: { Authorization: req.headers.authorization }
     });
@@ -34,30 +35,39 @@ export const createOrderFromCart = async (req, res) => {
       return res.status(400).json({ message: "Phone number is required" });
     }
 
-    // Get product details and calculate total
-    const orderProducts = await Promise.all(
-      cart.items.map(async (item) => {
-        try {
-          const productResponse = await axios.get(`http://product:3001/products/${item.productId}`);
-          const product = productResponse.data;
-          
-          return {
-            productId: item.productId,
-            name: product.name,
-            price: product.price,
-            quantity: item.quantity,
-            color: item.color
-          };
-        } catch (error) {
-          throw new Error(`Product ${item.productId} not found`);
+    // Check product availability and get details via HTTP
+    const orderProducts = [];
+    for (const item of cart.items) {
+      try {
+        // Get product details
+        const productResponse = await axios.get(`http://product:3001/products/${item.productId}`);
+        const product = productResponse.data;
+
+        // Check stock availability
+        if (product.stock < item.quantity) {
+          return res.status(400).json({ 
+            message: `Insufficient stock for product ${product.name}. Available: ${product.stock}, Requested: ${item.quantity}` 
+          });
         }
-      })
-    );
+
+        orderProducts.push({
+          productId: item.productId,
+          name: product.name,
+          price: product.price,
+          quantity: item.quantity,
+          color: item.color
+        });
+      } catch (error) {
+        return res.status(404).json({ 
+          message: `Product ${item.productId} not found or unavailable` 
+        });
+      }
+    }
 
     const subtotalAmount = orderProducts.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const netAmount = subtotalAmount; // Add tax, shipping calculations here if needed
 
-    // Create order
+    // Create order in database
     const order = new Order({
       userId: user.userId,
       products: orderProducts,
@@ -65,16 +75,30 @@ export const createOrderFromCart = async (req, res) => {
       subtotalAmount,
       address: userData.addresses[0].formattedAddress,
       phoneNumber: userData.phoneNumber,
-      status: "PENDING"
+      status: "PENDING",
+      events: [{ status: "PENDING" }]
     });
 
     await order.save();
 
-    // Clear cart after successful order
+    // Clear cart after successful order (HTTP operation)
     await Cart.findOneAndUpdate(
       { userId: user.userId },
       { items: [] }
     );
+
+    // ONLY use RabbitMQ for inventory stock updates
+    const stockUpdates = orderProducts.map(p => ({
+      productId: p.productId,
+      quantity: p.quantity
+    }));
+
+    await MessageBroker.publishMessage("inventory_updates", {
+      type: "REDUCE_STOCK",
+      products: stockUpdates,
+      orderId: order._id,
+      timestamp: new Date().toISOString()
+    });
 
     res.status(201).json({
       message: "Order created successfully",
@@ -86,36 +110,48 @@ export const createOrderFromCart = async (req, res) => {
   }
 };
 
-// Get user orders
+// Get user orders (HTTP only)
 export const getUserOrders = async (req, res) => {
   try {
     const user = getUserFromToken(req);
-    
+
     const orders = await Order.find({ userId: user.userId })
       .sort({ createdAt: -1 });
-    
+
     res.status(200).json(orders);
   } catch (error) {
     console.error("Error fetching orders:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
+// Get all orders (Admin)
+export const getAllOrders = async (req, res) => {
+  try {
+    const orders = await Order.find().sort({ createdAt: -1 }); // ❌ no populate
+    res.status(200).json(orders);
+  } catch (error) {
+    console.error("Error fetching all orders:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
 
-// Get order by ID
+
+
+// Get order by ID (HTTP only)
 export const getOrderById = async (req, res) => {
   try {
     const user = getUserFromToken(req);
     const { orderId } = req.params;
-    
+
     const order = await Order.findOne({ 
       _id: orderId, 
       userId: user.userId 
     });
-    
+
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
-    
+
     res.status(200).json(order);
   } catch (error) {
     console.error("Error fetching order:", error);
@@ -123,24 +159,81 @@ export const getOrderById = async (req, res) => {
   }
 };
 
-// Update order status
+// Update order status (HTTP only)
 export const updateOrderStatus = async (req, res) => {
   try {
     const { orderId } = req.params;
     const { status } = req.body;
-    
+
+    const validStatuses = ["PENDING", "PACKING", "OUT_FOR_DELIVERY", "DELIVERED"];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
     const order = await Order.findById(orderId);
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
-    
+
     order.status = status;
     order.events.push({ status });
     await order.save();
-    
-    res.status(200).json({ message: "Order status updated successfully", order });
+
+    res.status(200).json({ 
+      message: "Order status updated successfully", 
+      order 
+    });
   } catch (error) {
     console.error("Error updating order status:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Cancel order (with stock restoration via RabbitMQ)
+export const cancelOrder = async (req, res) => {
+  try {
+    const user = getUserFromToken(req);
+    const { orderId } = req.params;
+
+    const order = await Order.findOne({ 
+      _id: orderId, 
+      userId: user.userId 
+    });
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    if (order.status !== "PENDING") {
+      return res.status(400).json({ 
+        message: "Order can only be cancelled when status is PENDING" 
+      });
+    }
+
+    // Update order status
+    order.status = "CANCELLED";
+    order.events.push({ status: "CANCELLED" });
+    await order.save();
+
+    // Restore stock via RabbitMQ
+    const stockUpdates = order.products.map(p => ({
+      productId: p.productId,
+      quantity: p.quantity
+    }));
+
+    await MessageBroker.publishMessage("inventory_updates", {
+      type: "RESTORE_STOCK",
+      products: stockUpdates,
+      orderId: order._id,
+      timestamp: new Date().toISOString()
+    });
+
+    res.status(200).json({ 
+      message: "Order cancelled successfully", 
+      order 
+    });
+  } catch (error) {
+    console.error("Error cancelling order:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };

@@ -28,6 +28,9 @@ export default function AdminHome() {
   const [yearlySales, setYearlySales] = useState<number>(0);
   const [monthlySalesData, setMonthlySalesData] = useState<number[]>(Array(12).fill(0));
   const [customerCount, setCustomerCount] = useState<number>(0);
+  const [totalOrders, setTotalOrders] = useState<number>(0);
+  const [pendingOrders, setPendingOrders] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(true);
   
   useEffect(() => {
     const fetchOrders = async () => {
@@ -35,12 +38,14 @@ export default function AdminHome() {
         const token = sessionStorage.getItem("authToken");
         if (!token) {
           console.log("No auth token found");
+          setLoading(false);
           return;
         }
   
-        const response = await fetch("http://localhost:5000/api/orders/index", {
+        // Updated API endpoint to match your requirement
+        const response = await fetch("http://localhost:3002/orders/all", {
           headers: {
-            Authorization: token,
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         });
@@ -49,57 +54,75 @@ export default function AdminHome() {
           throw new Error(`API request failed with status ${response.status}`);
         }
   
-        const result = await response.json();
+        const orders = await response.json();
       
-        if (response.status === 200) {
-          const orders = result;
+        if (!orders || !Array.isArray(orders)) {
+          console.error("Invalid orders data:", orders);
+          setLoading(false);
+          return;
+        }
   
-          if (!orders || !Array.isArray(orders)) {
-            console.error("Invalid orders data:", orders);
-            return;
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth();
+        const currentYear = currentDate.getFullYear();
+        const today = new Date().toDateString();
+  
+        let monthlySalesTotal = 0;
+        let todaySalesTotal = 0;
+        let yearlySalesTotal = 0;
+        let pendingOrdersCount = 0;
+        const monthlySalesData = Array(12).fill(0);
+        const uniqueCustomers = new Set<string>();
+  
+        orders.forEach((order: Order) => {
+          const orderDate = new Date(order.createdAt);
+          const orderMonth = orderDate.getMonth();
+          const orderYear = orderDate.getFullYear();
+          const orderDateString = orderDate.toDateString();
+          const orderAmount = typeof order.netAmount === 'string' ? 
+            parseFloat(order.netAmount) : order.netAmount;
+  
+          // Add unique customers
+          if (order.userId) {
+            uniqueCustomers.add(order.userId);
           }
   
-          const currentDate = new Date();
-          const currentMonth = currentDate.getMonth();
-          const currentYear = currentDate.getFullYear();
-          const today = currentDate.getDate();
+          // Count pending orders
+          if (order.status === "PENDING") {
+            pendingOrdersCount++;
+          }
   
-          let monthlySalesTotal = 0;
-          let todaySalesTotal = 0;
-          let yearlySalesTotal = 0;
-          const monthlySalesData = Array(12).fill(0);
+          // Monthly sales (current month)
+          if (orderMonth === currentMonth && orderYear === currentYear) {
+            monthlySalesTotal += orderAmount;
+          }
   
-          orders.forEach((order: Order) => {
-            const orderDate = new Date(order.createdAt);
-            const orderMonth = orderDate.getMonth();
-            const orderYear = orderDate.getFullYear();
-            const orderDay = orderDate.getDate();
+          // Today's sales
+          if (orderDateString === today) {
+            todaySalesTotal += orderAmount;
+          }
   
-            if (orderMonth === currentMonth && orderYear === currentYear) {
-              monthlySalesTotal += parseFloat(order.netAmount);
-              if (orderDay === today) {
-                todaySalesTotal += parseFloat(order.netAmount);
-              }
-            }
+          // Yearly sales and monthly breakdown
+          if (orderYear === currentYear) {
+            yearlySalesTotal += orderAmount;
+            monthlySalesData[orderMonth] += orderAmount;
+          }
+        });
   
-            if (orderYear === currentYear) {
-              yearlySalesTotal += parseFloat(order.netAmount);
-              monthlySalesData[orderMonth] += parseFloat(order.netAmount);
-            }
-          });
-
-  
-          setMonthlySales(monthlySalesTotal);
-          setTodaySales(todaySalesTotal);
-          setYearlySales(yearlySalesTotal);
-          setMonthlySalesData(monthlySalesData);
-        }
+        setMonthlySales(monthlySalesTotal);
+        setTodaySales(todaySalesTotal);
+        setYearlySales(yearlySalesTotal);
+        setMonthlySalesData(monthlySalesData);
+        setTotalOrders(orders.length);
+        setPendingOrders(pendingOrdersCount);
+        setCustomerCount(uniqueCustomers.size);
+        
       } catch (error) {
         console.error("Error fetching orders:", error);
+      } finally {
+        setLoading(false);
       }
     };
-
-
 
     const fetchUsers = async () => {
       try {
@@ -111,7 +134,7 @@ export default function AdminHome() {
     
         const response = await fetch("http://localhost:5000/api/users/", {
           headers: {
-            Authorization: token,
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         });
@@ -133,65 +156,44 @@ export default function AdminHome() {
     };
 
     fetchOrders();
-    fetchUsers();
+    // Only fetch users if you have a separate user endpoint, otherwise customer count is derived from orders
+    // fetchUsers();
   }, []);
-  
- 
-
   
   const stats = [
     {
       title: "Yearly Sales",
-      value: `LKR ${yearlySales.toLocaleString()}`,
+      value: loading ? "Loading..." : `LKR ${yearlySales.toLocaleString()}`,
       color: "text-red-400",
       icon: "📊",
     },
     {
-      title: "Monthly Sales",
-      value: `LKR ${monthlySales.toLocaleString()}`,
+      title: "Monthly Sales", 
+      value: loading ? "Loading..." : `LKR ${monthlySales.toLocaleString()}`,
       color: "text-green-400",
       icon: "🛒",
     },
     {
       title: "Daily Sales",
-      value: `LKR ${todaySales.toLocaleString()}`,
+      value: loading ? "Loading..." : `LKR ${todaySales.toLocaleString()}`,
       color: "text-red-400",
       icon: "📉",
-    },
-    
-    
-    {
-      title: "Customers",
-      value: customerCount.toString(),
-      color: "text-green-400",
-      icon: "👥"
     }
   ];
 
-
-
   const data = {
     labels: [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
     ],
     datasets: [
       {
-        label: "Sales",
+        label: "Monthly Sales (LKR)",
         data: monthlySalesData,
         borderColor: "#22c55e",
         backgroundColor: "rgba(34, 197, 94, 0.2)",
         tension: 0.4,
+        fill: true,
       }
     ],
   };
@@ -200,19 +202,42 @@ export default function AdminHome() {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { labels: { color: "white" } },
-      tooltip: { mode: "index", intersect: false },
+      legend: { 
+        labels: { color: "white" },
+        position: 'top'
+      },
+      tooltip: { 
+        mode: "index", 
+        intersect: false,
+        callbacks: {
+          label: function(context) {
+            return `${context.dataset.label}: LKR ${context.parsed.y.toLocaleString()}`;
+          }
+        }
+      },
     },
     scales: {
-      x: { ticks: { color: "white" } },
-      y: { ticks: { color: "white" }, beginAtZero: true },
+      x: { 
+        ticks: { color: "white" },
+        grid: { color: "rgba(255, 255, 255, 0.1)" }
+      },
+      y: { 
+        ticks: { 
+          color: "white",
+          callback: function(value) {
+            return ` ${Number(value).toLocaleString()}`;
+          }
+        },
+        beginAtZero: true,
+        grid: { color: "rgba(255, 255, 255, 0.1)" }
+      },
     },
   };
 
   return (
     <div className="flex-1 p-4 md:p-6 xl:p-10 bg-[#262626] min-h-screen text-white rounded-2xl">
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 gap-3 mb-2 sm-525:grid-cols-2 lg:grid-cols-4 sm-525:gap-5 lg:gap-6 md:mb-4 ">
+      <div className="grid grid-cols-1 gap-3 mb-2 sm-525:grid-cols-2 lg:grid-cols-3 sm-525:gap-5 lg:gap-6 md:mb-4 ">
         {stats.map((stat, index) => (
           <div
             key={index}
@@ -221,7 +246,7 @@ export default function AdminHome() {
             <div
               className={`${stat.color} text-lg flex items-center capitalize`}
             >
-              <span className="mr-2 text-lg md:text-2xl ">{stat.icon}</span>
+              <span className="mr-2 text-lg md:text-xl">{stat.icon}</span>
               {stat.title}
             </div>
             <div className="text-lg font-semibold md:text-xl xl:text-2xl md:font-bold">
@@ -231,8 +256,8 @@ export default function AdminHome() {
         ))}
       </div>
 
-      {/* Product Stock Section */}
-      <div className="flex items-start justify-between w-full">
+      {/* Product Stock Section - You can add your Swiper content here */}
+      <div className="flex items-start justify-between w-full mb-6">
         <div className="min-w-full">
           <Swiper
             modules={[Autoplay]}
@@ -245,18 +270,24 @@ export default function AdminHome() {
             autoplay={{ delay: 4000 }}
             loop={true}
           >
-           
+            {/* Add your product slides here */}
           </Swiper>
         </div>
       </div>
 
       {/* Chart Section */}
       <div className="bg-black p-5 lg:p-7 rounded-xl w-full max-w-2.5xl mx-auto mt-6 lg:mt-8">
-            <h2 className="mb-4 text-lg font-semibold md:text-xl">Sales vs Receivable</h2>
-            <div className="h-[400px] md:h-[300px]">
-              <Line data={data} options={options} />
+        <h2 className="mb-4 text-lg font-semibold md:text-xl">Sales</h2>
+        <div className="h-[400px] md:h-[300px]">
+          {loading ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-gray-400">Loading chart data...</div>
             </div>
-          </div>
+          ) : (
+            <Line data={data} options={options} />
+          )}
+        </div>
+      </div>
     </div>
   );
 }

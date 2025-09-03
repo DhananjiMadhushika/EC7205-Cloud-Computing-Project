@@ -4,14 +4,12 @@ const OrderEventSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: [
-      "PAYMENT_DONE",
+      
       "PENDING", 
       "PACKING",
       "OUT_FOR_DELIVERY",
       "DELIVERED",
-      "CANCELLED",
-      "REQUEST_REFUND",
-      "REFUND_DONE",
+      
     ],
     default: "PENDING",
   },
@@ -47,14 +45,12 @@ const OrderSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: [
-        "PAYMENT_DONE",
+        
         "PENDING",
         "PACKING", 
         "OUT_FOR_DELIVERY",
         "DELIVERED",
-        "CANCELLED",
-        "REQUEST_REFUND",
-        "REFUND_DONE",
+        
       ],
       default: "PENDING",
     },

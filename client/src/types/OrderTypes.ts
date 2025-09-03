@@ -4,7 +4,7 @@ import { User } from "./UserTypes";
 export interface Order {
   products: Product;
   id: number;
-  userId: number;
+  userId: string;
   branchId:number;
   orderId: string;
   netAmount:string;

@@ -3,54 +3,116 @@ import amqp from "amqplib";
 class MessageBroker {
   constructor() {
     this.channel = null;
+    this.connection = null;
+    this.isConnected = false;
   }
 
   async connect() {
-    console.log("Connecting to RabbitMQ...");
+    console.log("Connecting to RabbitMQ for inventory updates...");
 
     setTimeout(async () => {
       try {
-        const connection = await amqp.connect("amqp://rabbitmq:5672");
-        this.channel = await connection.createChannel();
-        await this.channel.assertQueue("products");
-        console.log("RabbitMQ connected");
+        this.connection = await amqp.connect("amqp://rabbitmq:5672");
+        this.channel = await this.connection.createChannel();
+        
+        // Set up connection event handlers
+        this.connection.on('error', (err) => {
+          console.error("RabbitMQ connection error:", err.message);
+          this.isConnected = false;
+        });
+
+        this.connection.on('close', () => {
+          console.log("RabbitMQ connection closed");
+          this.isConnected = false;
+          setTimeout(() => this.connect(), 5000);
+        });
+        
+        // Create queue with simple configuration
+        await this.channel.assertQueue("inventory_updates", { 
+          durable: true
+        });
+        
+        this.isConnected = true;
+        console.log("RabbitMQ connected for inventory management");
+        console.log("Queue 'inventory_updates' is ready");
+        
       } catch (err) {
         console.error("Failed to connect to RabbitMQ:", err.message);
+        setTimeout(() => this.connect(), 10000);
       }
-    }, 20000); // delay 10 seconds to wait for RabbitMQ to start
+    }, 20000);
   }
 
   async publishMessage(queue, message) {
-    if (!this.channel) {
-      console.error("No RabbitMQ channel available.");
-      return;
+    console.log(`Publishing message to ${queue}:`, message.type);
+
+    if (!this.isConnected || !this.channel) {
+      console.error("No RabbitMQ channel available. Message not sent");
+      return false;
     }
 
     try {
-      await this.channel.sendToQueue(
-        queue,
-        Buffer.from(JSON.stringify(message))
-      );
+      const messageBuffer = Buffer.from(JSON.stringify(message));
+      await this.channel.sendToQueue(queue, messageBuffer, { persistent: true });
+      console.log(`Message published successfully:`, message.type);
+      return true;
     } catch (err) {
-      console.log(err);
+      console.error("Error publishing message:", err);
+      return false;
     }
   }
 
-  async consumeMessage(queue, callback) {
-    if (!this.channel) {
-      console.error("No RabbitMQ channel available.");
+  async consumeInventoryUpdates(callback) {
+    if (!this.isConnected || !this.channel) {
+      console.error("No RabbitMQ channel available for consuming");
       return;
     }
 
     try {
-      await this.channel.consume(queue, (message) => {
-        const content = message.content.toString();
-        const parsedContent = JSON.parse(content);
-        callback(parsedContent);
-        this.channel.ack(message);
+      console.log("Setting up inventory updates consumer...");
+      
+      await this.channel.consume("inventory_updates", async (message) => {
+        if (message) {
+          try {
+            const content = message.content.toString();
+            const parsedContent = JSON.parse(content);
+            
+            console.log("Received inventory update:", parsedContent.type);
+            
+            await callback(parsedContent);
+            this.channel.ack(message);
+            console.log("Inventory update processed successfully");
+            
+          } catch (error) {
+            console.error("Error processing inventory update:", error);
+            this.channel.reject(message, false);
+          }
+        }
       });
+      
+      console.log("Started consuming inventory updates");
     } catch (err) {
-      console.log(err);
+      console.error("Error setting up inventory updates consumer:", err);
+    }
+  }
+
+  // Simple status check
+  isReady() {
+    return this.isConnected && this.channel;
+  }
+
+  async close() {
+    try {
+      if (this.channel) {
+        await this.channel.close();
+      }
+      if (this.connection) {
+        await this.connection.close();
+      }
+      console.log("RabbitMQ connection closed");
+      this.isConnected = false;
+    } catch (error) {
+      console.error("Error closing RabbitMQ connection:", error);
     }
   }
 }

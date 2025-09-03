@@ -5,6 +5,7 @@ import cloudinary from "cloudinary";
 import { BadRequestsException } from "../exceptions/bad_requests.js";
 import { NotFoundException } from "../exceptions/not-found.js";
 import { ErrorCode } from "../exceptions/root.js";
+import MessageBroker from "../utils/messageBroker.js";
 
 // Configure Cloudinary
 cloudinary.v2.config({
@@ -132,6 +133,48 @@ export const searchProducts = async (req, res, next) => {
     }).populate("category colors");
 
     res.json(products);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// NEW: Update product stock (called via RabbitMQ from order service)
+export const updateProductStock = async (productUpdates) => {
+  try {
+    for (const update of productUpdates) {
+      const { productId, quantity } = update;
+      
+      const product = await Product.findById(productId);
+      if (product) {
+        product.stock = Math.max(0, product.stock - quantity);
+        await product.save();
+        
+        console.log(`Updated stock for product ${productId}: ${product.stock}`);
+      }
+    }
+  } catch (error) {
+    console.error("Error updating product stock:", error);
+  }
+};
+
+// NEW: Check product availability
+export const checkProductAvailability = async (req, res, next) => {
+  try {
+    const { productId, quantity } = req.body;
+    
+    const product = await Product.findById(productId);
+    if (!product) {
+      throw new NotFoundException("Product not found", ErrorCode.PRODUCT_NOT_FOUND);
+    }
+    
+    const isAvailable = product.stock >= quantity;
+    
+    res.json({
+      productId,
+      available: isAvailable,
+      currentStock: product.stock,
+      requestedQuantity: quantity
+    });
   } catch (err) {
     next(err);
   }
