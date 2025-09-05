@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import { Product } from "@/types/ProductType";
 import { showToastError } from "@/utils/toast/errToast";
 import { showToastSuccess } from "@/utils/toast/successToast";

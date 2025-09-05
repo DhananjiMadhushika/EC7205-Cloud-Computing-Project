@@ -55,7 +55,7 @@ const Header = ({ user }: HeaderTypes) => {
       <div className="w-full flex items-center justify-between px-5 py-2 h-[75px] lg:h-[80px]  xl:h-[100px] 2xl:h-[110px] max-w-1440 mx-auto">
         {/* Logo */}
         <img
-          src="/client/hero/logo.webp"
+          src="/client/hero/everlogo.webp"
           alt="HeaderLogo"
           className="w-auto h-14 xl:h-20"
         />

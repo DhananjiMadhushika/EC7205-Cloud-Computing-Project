@@ -1,4 +1,4 @@
-import { IconTag } from "@/components/IconTag";
+
 import { useEffect, useState } from "react";
 import { HiArrowNarrowRight } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
@@ -137,10 +137,7 @@ const Hero = () => {
         </div>
       </div>
 
-      {/* Fixed IconTag - always visible */}
-      <div className="fixed z-50 bottom-4 right-4">
-        <IconTag />
-      </div>
+     
     </>
   );
 };

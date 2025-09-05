@@ -1,10 +1,10 @@
 import { Mail, Phone, MapPin } from "lucide-react";
 import { Quote } from "lucide-react";
-import { Swiper, SwiperSlide } from 'swiper/react';
+
 import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
-import { Pagination, Navigation } from 'swiper/modules';
+
 import '../../../App.css'
 
 export default function Aboutus() {
@@ -12,259 +12,85 @@ export default function Aboutus() {
     <div className="flex flex-col w-full ">
       <div className="relative z-0 top-0 left-0 bg-center bg-cover w-full h-[350px] lg:h-[500px] bg-[url('/client/hero/factory.webp')]">
         {/* Hero Section */}
-        <div className="flex w-full h-full items-end justify-end bg-gray-500 bg-opacity-50 max-w-1440 mx-auto px-5 sm:px-8 lg:px-10 pb-3 md:pb-5">
+        <div className="flex items-end justify-end w-full h-full px-5 pb-3 mx-auto bg-gray-500 bg-opacity-50 max-w-1440 sm:px-8 lg:px-10 md:pb-5">
           <h1 className="font-anton text-[52px] sm:text-[64px] lg:text-[84px] text-white capitalize tracking-wide text-end leading-tight">
-            <span className="block md:mb-2 ">HARITHAWELI</span>
+            <span className="block md:mb-2 ">EverCoat</span>
             <span className="block relative text-4xl sm:text-[52px] lg:text-[62px]">
-              READY MIX
+              BRINGING WALLS TO LIFE
             </span>
           </h1>
         </div>
       </div>
 
-      <div className="flex flex-col max-w-1440 mx-auto w-full px-5 sm:px-8 lg:px-10">
+      <div className="flex flex-col w-full px-5 mx-auto max-w-1440 sm:px-8 lg:px-10">
         {/* Company Overview */}
         <section className="mt-6 lg:mt-10">
-          <h2 className="font-bold text-3xl lg:text-5xl text-center text-slate-900">
+          <h2 className="text-3xl font-bold text-center lg:text-5xl text-slate-900">
             Our Company
             <span className="block w-20 h-1.5  bg-green-700 mx-auto mt-2 lg:mt-3 rounded-full"></span>
           </h2>
-          <p className="text-gray-700 sm:text-center text-justify md:text-lg leading-relaxed mt-8 sm:mt-7">
-            The expertise of CEEDECS Lanka Holdings dates back to 1999 when it
-            was first established and later incorporated in 2016. The company as
-            a whole specializes in architectural consultancy, interior
-            designing, construction, and manufacture. The strength of the
-            company lies in our experience in the construction industry that has
-            progressed over a period of 23 years. This in turn has allowed us to
-            offer our expertise to both the private and corporate sectors at
-            very competitive rates. At CEEDECS Lanka Holdings, we are driven by
-            innovation to exceed the expectations of our customers.
+          <p className="mt-8 leading-relaxed text-justify text-gray-700 sm:text-center md:text-lg sm:mt-7">
+            EverCoat has been serving the community with premium quality paints and coatings 
+            since our establishment. We specialize in providing a comprehensive range of 
+            interior and exterior paints, protective coatings, and painting solutions for 
+            residential, commercial, and industrial projects. Our commitment to excellence 
+            and customer satisfaction has made us a trusted name in the paint industry, 
+            offering professional advice and high-quality products at competitive prices.
           </p>
-          <div className="mt-8 lg:mt-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-5 lg:gap-8 ">
-            <div className="z-0 top-0 left-0 bg-center bg-contain w-full h-[280px] rounded-xl lg:rounded-3xl sm-525:h-[350px] md:h-[250px] lg:h-[350px] bg-[url('/client/hero/companyImage1.webp')] transition-transform duration-300 hover:scale-95"></div>
-            <div className="z-0 top-0 left-0 bg-center bg-contain w-full h-[280px] rounded-xl lg:rounded-3xl sm-525:h-[350px] md:h-[250px] lg:h-[350px] bg-[url('/client/hero/companyImage2.webp')] transition-transform duration-300 hover:scale-95"></div>
-            <div className="z-0 top-0 left-0 bg-center bg-contain w-full h-[280px] rounded-xl lg:rounded-3xl sm-525:h-[350px] md:h-[250px] lg:h-[350px] bg-[url('/client/hero/companyImage3.webp')] transition-transform duration-300 hover:scale-95"></div>
-          </div>
+         
         </section>
 
         {/* Our Mission */}
-        <section className="mt-8 md:mt-14 flex justify-center md:px-24">
-          <div className="bg-green-700 rounded-2xl md:rounded-[30px] p-2">
-            {/* White Border */}
+        <section className="flex justify-center mt-8 md:mt-14 md:px-24">
+          <div className="bg-blue-600 rounded-2xl md:rounded-[30px] p-2 w-full">
             <div className="border-2 md:border-4 border-white rounded-[14px] md:rounded-[26px] p-5 md:p-10 text-center">
-              {/* Vision */}
-              <h2 className="text-white text-2xl lg:text-3xl font-bold uppercase mb-4">
+              <h2 className="mb-4 text-2xl font-bold text-white uppercase lg:text-3xl">
                 Our Mission
               </h2>
-              <p className="text-white lg:text-lg leading-relaxed mb-10">
-                Our aim is to be the leading innovative designers in the
-                construction industry by maintaining ethical and sustainable
-                standards, while we continue to build our legacy through our
-                strongly established authenticity, originality, and lasting
-                customer & business relationships founded on trust and loyalty.
+              <p className="mb-10 leading-relaxed text-white lg:text-lg">
+                To provide our customers with the highest quality paints and coatings, 
+                coupled with expert advice and exceptional service. We strive to be 
+                the preferred paint shop in our community by consistently delivering 
+                products that enhance and protect every surface we help transform.
               </p>
 
-              {/* Mission */}
-              <h2 className="text-white text-2xl lg:text-3xl font-bold uppercase mb-4">
+              <h2 className="mb-4 text-2xl font-bold text-white uppercase lg:text-3xl">
                 Our Vision
               </h2>
-              <p className="text-white lg:text-lg leading-relaxed">
-                To add extra joy in the lives of people through innovatively
-                designed surroundings.
+              <p className="leading-relaxed text-white lg:text-lg">
+                To be the leading paint shop that transforms spaces with color, 
+                quality, and creativity, making every project a masterpiece.
               </p>
             </div>
           </div>
         </section>
 
-        {/* Our Expertise */}
-        <section className="mt-8 md:mt-14">
-          <h2 className="font-bold text-3xl lg:text-5xl text-center text-slate-900">
-            Our Expertise
-            <span className="block w-20 h-1.5 bg-green-700 mx-auto mt-2 lg:mt-3 rounded-full"></span>
-          </h2>
-          <p className="text-gray-700 sm:text-center md:text-lg text-justify leading-relaxed mt-8 sm:mt-7">
-            With unparalleled respect, knowledge, and honest service, we serve
-            our customers by creating efficiently interconnected spaces and
-            environments. Our team of architects and engineers is dedicated to
-            delivering top-notch solutions tailored to our clients' needs.
-          </p>
-        </section>
-
-        
-      {/* Managing Director’s Message */}
-        <section className="mt-8 md:mt-14 flex justify-center">
-          <div className="bg-gray-100 p-6 rounded-lg shadow-md text-center max-w-3xl">
-            <Quote className="w-8 h-8 md:w-10 md:h-10 text-green-700 mx-auto mb-4" />
-            <p className="text-base md:text-lg italic text-gray-700">
-              "CEEDECS Lanka Holdings (Pvt) Ltd. has come a long way since its
-              inception, driven by innovation and a commitment to excellence. We
-              take pride in delivering quality solutions that exceed our
-              customers' expectations."
+       <section className="flex justify-center mt-8 md:mt-14">
+          <div className="max-w-3xl p-6 text-center border border-blue-100 rounded-lg shadow-md bg-blue-50">
+            <Quote className="w-8 h-8 mx-auto mb-4 text-blue-600 md:w-10 md:h-10" />
+            <p className="text-base italic text-gray-700 md:text-lg">
+              "At EverCoat, we believe that every surface tells a story, and we're here 
+              to help you tell yours with the perfect color and finish. Our dedication 
+              to quality products and personalized service ensures that your vision 
+              becomes reality."
             </p>
-            <h3 className="text-base md:text-xl font-bold mt-4 text-gray-900">
-              Janaka G Mahanama
+            <h3 className="mt-4 text-base font-bold text-gray-900 md:text-xl">
+              Janaka M Pathirana
             </h3>
-            <p className="text-sm md:text-base text-green-600 font-semibold">Managing Director</p>
+            <p className="text-sm font-semibold text-blue-600 md:text-base">Store Owner</p>
           </div>
         </section>
+
+
       </div>
 
-      
-      {/* Product Range */}
-      <section
-        className="mt-8 md:mt-14 bg-cover bg-center bg-fixed text-white py-8 md:py-10 px-5 sm:px-8 lg:px-10 backdrop-blur-2xl"
-        style={{
-          backgroundImage: `linear-gradient(135deg, rgba(236, 233, 230, 0.4), rgba(255, 255, 255, 0)), url('/client/hero/reviewBg.webp')`,
-        }}
-      >
-        <div className="max-w-5xl mx-auto ">
-          {/* Section Title */}
-          <h2 className="text-3xl lg:text-5xl font-bold text-slate-900 text-center">
-            Our Product Range
-            <span className="block w-20 h-1.5 bg-green-700 mx-auto mt-2 lg:mt-3 rounded-full"></span>
-          </h2>
-
-          {/* Product Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 mt-8 lg:mt-14">
-            {[
-              {
-                title: "Tile Adhesive",
-                description:
-                  "Ensures durable and long-lasting tile installations.",
-              },
-              {
-                title: "Water Proofing",
-                description:
-                  "Protects structures from water damage, enhancing longevity.",
-              },
-              {
-                title: "Brick Bond",
-                description: "Provides strong adhesion for brickwork.",
-              },
-              {
-                title: "Wall Putty",
-                description: "Smoothens walls for a flawless finish.",
-              },
-              {
-                title: "Clay Putty",
-                description:
-                  "Offers a natural, eco-friendly wall finishing solution.",
-              },
-              {
-                title: "Tile Mortar",
-                description: "Specialized mix for secure tile setting.",
-              },
-              {
-                title: "Ready Mix Plaster",
-                description: "Convenient and efficient plastering solution.",
-              },
-              {
-                title: "Terrazzo Floor-Mix",
-                description: "Creates beautiful and durable terrazzo flooring.",
-              },
-            ].map((product, index) => (
-              <div
-                key={index}
-                className="bg-white border-spacing-36 border-4 hover:border-[#47b33fe1] shadow-md rounded-xl p-6 transition-transform transform hover:scale-105 hover:shadow-lg text-center"
-              >
-                <h3 className="text-xl font-bold text-green-500 ">
-                  {product.title}
-                </h3>
-                <p className="text-gray-600 mt-2">{product.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-      
-{/* YouTube Video Section */}
-<section className="mt-8 md:mt-14 px-8 sm:px-10 lg:px-12 bg-white">
-  <div className="max-w-7xl mx-auto">
-    <h2 className="text-3xl lg:text-5xl font-bold text-slate-900 text-center">
-      Watch Our Videos
-      <span className="block w-20 h-1.5 bg-green-700 mx-auto mt-2 lg:mt-3 rounded-full"></span>
-    </h2>
-
-    {/* Swiper Carousel */}
-    <div className="mt-8">
-      <Swiper
-        slidesPerView={1} // Show 1 slide on mobile
-        spaceBetween={20}
-        pagination={{
-          clickable: true,
-        }}
-        navigation={true}
-        breakpoints={{
-          640: {
-            slidesPerView: 2, // Show 2 slides on tablets
-          },
-          1024: {
-            slidesPerView: 3, // Show 3 slides on desktop
-          },
-        }}
-        modules={[Pagination, Navigation]}
-        className="mySwiper"
-      >
-        {/* Video 1 */}
-        <SwiperSlide>
-          <div className="w-full h-[200px] md:h-[200px] xl:h-[225px]">
-            <iframe
-              width="640"
-              height="360"
-              src="https://www.youtube.com/embed/gEzqGLiG8XU?si=78q-97Ccmho93PJR"
-              title="YouTube video player"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              referrerPolicy="strict-origin-when-cross-origin"
-              allowFullScreen
-              className="w-full h-full rounded-lg shadow-lg"
-            ></iframe>
-          </div>
-        </SwiperSlide>
-
-        {/* Video 2 */}
-        <SwiperSlide>
-          <div className="w-full h-[200px] md:h-[200px] xl:h-[225px]">
-            <iframe
-              width="640"
-              height="360"
-              src="https://www.youtube.com/embed/ey6qVwJLCHM?si=sjDN1nwYhqzrQoM6"
-              title="YouTube video player"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              referrerPolicy="strict-origin-when-cross-origin"
-              allowFullScreen
-              className="w-full h-full rounded-lg shadow-lg"
-            ></iframe>
-          </div>
-        </SwiperSlide>
-
-        {/* Video 3 */}
-        <SwiperSlide>
-          <div className="w-full h-[200px] md:h-[200px] xl:h-[225px]">
-            <iframe
-              width="640"
-              height="360"
-              src="https://www.youtube.com/embed/8PEsyfjp434?si=81ItXVuSqupVfcL2"
-              title="YouTube video player"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              referrerPolicy="strict-origin-when-cross-origin"
-              allowFullScreen
-              className="w-full h-full rounded-lg shadow-lg"
-            ></iframe>
-          </div>
-        </SwiperSlide>
-      </Swiper>
-    </div>
-  </div>
-</section>
 
 
-      <section className="mt-5 md:mt-10 px-5 sm:px-8 lg:px-10 bg-white">
+
+      <section className="px-5 mt-5 bg-white md:mt-10 sm:px-8 lg:px-10">
         <div className="max-w-4xl mx-auto ">
           {/* Section Title */}
-          <h2 className="text-3xl lg:text-5xl font-bold text-slate-900 text-center">
+          <h2 className="text-3xl font-bold text-center lg:text-5xl text-slate-900">
             Contact Us
           </h2>
           <p className="text-gray-600 mt-2.5 text-center">
@@ -273,27 +99,27 @@ export default function Aboutus() {
           </p>
 
           {/* Contact Details */}
-          <div className="mt-8 lg:mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6 mb-3">
+          <div className="grid grid-cols-1 gap-4 mt-8 mb-3 lg:mt-10 sm:grid-cols-3 lg:gap-6">
             {/* Email */}
-            <div className="bg-gray-50 border border-gray-200 shadow-sm rounded-xl p-6 text-center transition-transform transform hover:-translate-y-2 hover:shadow-lg">
-              <Mail className="text-green-600 w-10 h-10 mx-auto mb-3" />
+            <div className="p-6 text-center transition-transform transform border border-gray-200 shadow-sm bg-gray-50 rounded-xl hover:-translate-y-2 hover:shadow-lg">
+              <Mail className="w-10 h-10 mx-auto mb-3 text-blue-600" />
               <h3 className="text-lg font-semibold text-gray-900">Email</h3>
-              <p className="text-gray-700 mt-1">info@harithaweli.lk</p>
+              <p className="mt-1 text-gray-700">info@harithaweli.lk</p>
             </div>
 
             {/* Phone */}
-            <div className="bg-gray-50 border border-gray-200 shadow-sm rounded-xl p-6 text-center transition-transform transform hover:-translate-y-2 hover:shadow-lg">
-              <Phone className="text-green-600 w-10 h-10 mx-auto mb-3" />
+            <div className="p-6 text-center transition-transform transform border border-gray-200 shadow-sm bg-gray-50 rounded-xl hover:-translate-y-2 hover:shadow-lg">
+              <Phone className="w-10 h-10 mx-auto mb-3 text-blue-600" />
               <h3 className="text-lg font-semibold text-gray-900">Phone</h3>
-              <p className="text-gray-700 mt-1">+94 710 500 800</p>
+              <p className="mt-1 text-gray-700">+94 71 050 0800</p>
             </div>
 
             {/* Address */}
-            <div className="bg-gray-50 border border-gray-200 shadow-sm rounded-xl p-6 text-center transition-transform transform hover:-translate-y-2 hover:shadow-lg">
-              <MapPin className="text-green-600 w-10 h-10 mx-auto mb-3" />
+            <div className="p-6 text-center transition-transform transform border border-gray-200 shadow-sm bg-gray-50 rounded-xl hover:-translate-y-2 hover:shadow-lg">
+              <MapPin className="w-10 h-10 mx-auto mb-3 text-blue-600" />
               <h3 className="text-lg font-semibold text-gray-900">Address</h3>
-              <p className="text-gray-700 mt-1">
-                132/1, Kandy Road, Mahara, Kadawatha, Sri Lanka
+              <p className="mt-1 text-gray-700">
+                123 Main Street, Colombo, Sri Lanka
               </p>
             </div>
           </div>

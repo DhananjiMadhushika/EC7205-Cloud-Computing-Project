@@ -1,7 +1,7 @@
 import Login from "@/pages/LoginPage";
 import { useAuth } from "@/Providers/AuthProvider";
 import { showToastinfo } from "@/utils/toast/infoToast";
-import { AnimatePresence, motion } from "framer-motion";
+
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BsBoxSeamFill } from "react-icons/bs";
@@ -20,9 +20,9 @@ export default function Navbar() {
   const location = useLocation();
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<string | null>("home");
-  const [hoveredTab, setHoveredTab] = useState<string | null>(null);
+  
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated} = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {

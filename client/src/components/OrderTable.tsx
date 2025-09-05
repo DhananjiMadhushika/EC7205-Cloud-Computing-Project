@@ -90,7 +90,7 @@ const OrderTable = ({ data, type, onStatusUpdate }: OrderProps) => {
         throw new Error(errorData.message || `Failed to update status: ${response.status}`);
       }
 
-      const result = await response.json();
+      
       
       // Update local state
       setStatusUpdates((prev) => ({ ...prev, [selectedOrderId]: newStatus }));
