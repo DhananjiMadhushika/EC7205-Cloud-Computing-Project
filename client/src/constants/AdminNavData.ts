@@ -15,10 +15,6 @@ export const mainItems = [
     label: "Orders",
     url: "order",
   },
-  {
-    imageSrc: "/Admin/sidebar/reports.png",
-    label: "Reports",
-    url: "sales-report",
-  },
+  
   { imageSrc: "/Admin/sidebar/profile.png", label: "Profile", url: "profile" },
 ];

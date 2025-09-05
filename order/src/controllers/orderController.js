@@ -14,7 +14,7 @@ const getUserFromToken = (req) => {
 export const createOrderFromCart = async (req, res) => {
   try {
     const user = getUserFromToken(req);
-    const { selectedItemIds } = req.body; // ✅ expect from frontend
+    const { selectedItemIds } = req.body;
 
     // Get user's cart
     const cart = await Cart.findOne({ userId: user.userId });
@@ -26,7 +26,7 @@ export const createOrderFromCart = async (req, res) => {
       return res.status(400).json({ message: "No items selected for order" });
     }
 
-    // ✅ Filter only selected cart items
+    // Filter only selected cart items
     const selectedItems = cart.items.filter((item) =>
       selectedItemIds.includes(item._id.toString())
     );
@@ -41,6 +41,13 @@ export const createOrderFromCart = async (req, res) => {
     );
     const userData = userResponse.data;
 
+    // Validate required customer details
+    if (!userData.name || !userData.email) {
+      return res.status(400).json({ 
+        message: "Customer name and email are required" 
+      });
+    }
+
     if (
       !userData.addresses ||
       userData.addresses.length === 0 ||
@@ -48,6 +55,7 @@ export const createOrderFromCart = async (req, res) => {
     ) {
       return res.status(400).json({ message: "Shipping address is required" });
     }
+    
     if (!userData.phoneNumber) {
       return res.status(400).json({ message: "Phone number is required" });
     }
@@ -88,21 +96,29 @@ export const createOrderFromCart = async (req, res) => {
     );
     const netAmount = subtotalAmount; // add tax/shipping if needed
 
-    // Create new order
+    // Create new order with customer details
     const order = new Order({
       userId: user.userId,
+      
+      // Save customer details at the time of order creation
+      customerDetails: {
+        name: userData.name,
+        email: userData.email,
+        phoneNumber: userData.phoneNumber
+      },
+      
       products: orderProducts,
       netAmount,
       subtotalAmount,
       address: userData.addresses[0].formattedAddress,
-      phoneNumber: userData.phoneNumber,
+      phoneNumber: userData.phoneNumber, // Keep for backward compatibility
       status: "PENDING",
       events: [{ status: "PENDING" }],
     });
 
     await order.save();
 
-    // ✅ Remove only selected items from cart
+    // Remove only selected items from cart
     cart.items = cart.items.filter(
       (item) => !selectedItemIds.includes(item._id.toString())
     );
@@ -148,7 +164,7 @@ export const getUserOrders = async (req, res) => {
 // Get all orders (Admin)
 export const getAllOrders = async (req, res) => {
   try {
-    const orders = await Order.find().sort({ createdAt: -1 }); // ❌ no populate
+    const orders = await Order.find().sort({ createdAt: -1 });
     res.status(200).json(orders);
   } catch (error) {
     console.error("Error fetching all orders:", error);
@@ -156,9 +172,6 @@ export const getAllOrders = async (req, res) => {
   }
 };
 
-
-
-// Get order by ID (HTTP only)
 export const getOrderById = async (req, res) => {
   try {
     const user = getUserFromToken(req);

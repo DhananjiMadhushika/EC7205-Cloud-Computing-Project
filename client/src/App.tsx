@@ -29,7 +29,7 @@ import AdminAddProductsPage from "./pages/Admin/AdminProducts/AdminAddProductsPa
 import AdminProductPage from "./pages/Admin/AdminProducts/AdminProductPage";
 import AdminViewProductsPage from "./pages/Admin/AdminProducts/AdminViewProductsPage";
 import AdminProfilePage from "./pages/Admin/AdminProfile/AdminProfilePage";
-import AdminReportPage from "./pages/Admin/AdminReport/AdminReportPage";
+
 import { AuthProvider } from "./Providers/AuthProvider";
 
 
@@ -53,7 +53,7 @@ function AnalyticsListener() {
 
 function App() {
   useEffect(() => {
-    initGA(); // Initialize Google Analytics once
+    initGA();
   }, []);
   
   return (
@@ -93,8 +93,7 @@ function App() {
             <Route path="/users" element={<ProtectedRoute requiredRole="ADMIN"><AdminUserPage /></ProtectedRoute>} />
              <Route path="/order" element={<ProtectedRoute requiredRole="ADMIN"><AdminOrderPage /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute requiredRole="ADMIN"><AdminProfilePage /></ProtectedRoute>} />
-            <Route path="/sales-report" element={<ProtectedRoute requiredRole="ADMIN"><AdminReportPage /></ProtectedRoute>} />
-
+            
              <Route path="/products/manage-categories" element={<ProtectedRoute requiredRole="ADMIN"><ManageCategoryPage /></ProtectedRoute>} />
              <Route path="/products/manage-colors" element={<ProtectedRoute requiredRole="ADMIN"><ManageColorPage /></ProtectedRoute>} />
  

@@ -128,3 +128,17 @@ export const getUserById = async (req, res) => {
     });
   }
 };
+
+// Get all users with role USER (no limit)
+export const getAllNormalUsers = async (req, res) => {
+  try {
+    const users = await User.find({ role: "USER" }).populate("addresses");
+    res.json(users);
+  } catch (error) {
+    console.error("Error fetching all normal users:", error);
+    res.status(500).json({
+      error: "Failed to fetch users",
+      message: error.message
+    });
+  }
+};

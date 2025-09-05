@@ -4,12 +4,11 @@ const OrderEventSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: [
-      
-      "PENDING", 
-      "PACKING",
+      "PENDING",
+      "PACKING", 
       "OUT_FOR_DELIVERY",
       "DELIVERED",
-      
+      "CANCELLED"
     ],
     default: "PENDING",
   },
@@ -33,25 +32,35 @@ const OrderProductSchema = new mongoose.Schema({
   }
 });
 
+// Add customer details schema
+const CustomerDetailsSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true },
+  phoneNumber: { type: String, required: true }
+}, { _id: false }); // _id: false to prevent MongoDB from creating an _id for this subdocument
+
 const OrderSchema = new mongoose.Schema(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    
+    // Add customer details - stored at time of order creation
+    customerDetails: { type: CustomerDetailsSchema, required: true },
+    
     products: [OrderProductSchema],
     netAmount: { type: Number, required: true },
     subtotalAmount: { type: Number },
     discountPercentage: { type: Number, default: 0 },
     discountAmount: { type: Number, default: 0 },
     address: { type: String, required: true },
-    phoneNumber: { type: String, required: true },
+    phoneNumber: { type: String, required: true }, // Keep this for backward compatibility or remove if not needed
     status: {
       type: String,
       enum: [
-        
         "PENDING",
         "PACKING", 
         "OUT_FOR_DELIVERY",
         "DELIVERED",
-        
+        "CANCELLED"
       ],
       default: "PENDING",
     },

@@ -23,7 +23,8 @@ const AdminUser = () => {
           return;
         }
 
-        const apiUrl = `http://localhost:5000/api/users`; // 👈 your new API
+        // Updated API endpoint to match the one that returns data
+        const apiUrl = `http://localhost:3000/users/all-users`;
 
         const response = await fetch(apiUrl, {
           headers: {
@@ -34,11 +35,12 @@ const AdminUser = () => {
 
         const result = await response.json();
 
+        // Updated mapping to match the actual API response structure
         const formattedUsers: User[] = result.map((user: any) => ({
-          id: user.id,
+          id: user._id, // MongoDB uses _id instead of id
           name: user.name,
           email: user.email,
-          phoneNo: user.phoneNumber,
+          phoneNo: user.phoneNumber, // API returns phoneNumber
           userImage: user.userImage || null,
         }));
 
@@ -60,7 +62,9 @@ const AdminUser = () => {
       setFilteredUsers(users);
     } else {
       const filtered = users.filter((user) =>
-        user.name?.toLowerCase().includes(searchTerm.toLowerCase())
+        user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.phoneNo?.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredUsers(filtered);
     }

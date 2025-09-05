@@ -17,7 +17,7 @@ orderRoutes.post("/create", isAuthenticated, createOrderFromCart);
 orderRoutes.get("/all",isAuthenticated, getAllOrders);
 orderRoutes.get("/", isAuthenticated, getUserOrders);
 orderRoutes.get("/:orderId", isAuthenticated, getOrderById);
-orderRoutes.put("/:orderId/status", updateOrderStatus);
+orderRoutes.put("/:orderId/status",isAuthenticated, updateOrderStatus);
 orderRoutes.put("/:orderId/cancel", isAuthenticated, cancelOrder);
 orderRoutes.get("/all",isAuthenticated, getAllOrders);
 

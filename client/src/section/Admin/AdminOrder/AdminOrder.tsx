@@ -9,9 +9,11 @@ const AdminOrder = () => {
   const [searchOrderId, setSearchOrderId] = useState("");
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
   const itemsPerPage = 10;
 
   const fetchOrders = async () => {
+    setIsLoading(true);
     try {
       const token = sessionStorage.getItem("authToken");
       if (!token) {
@@ -33,13 +35,13 @@ const AdminOrder = () => {
 
       const result = await response.json();
 
-      // Format orders based on the new data structure
+      // Format orders based on the new data structure with proper null/undefined checks
       const formattedOrders: Order[] = result.map((order: any) => ({
         id: order._id,
         orderId: order._id,
-        name: "N/A", // User information not included in this response
+        name: order.customerDetails?.name || "N/A",
         address: order.address || "N/A",
-        branch: "N/A", // Branch information not included in this response
+        
         orderedProducts: order.products?.map((p: any) => {
           const colorInfo = p.color ? ` (${p.color.name})` : "";
           return `${p.name}${colorInfo} (x${p.quantity})`;
@@ -47,7 +49,7 @@ const AdminOrder = () => {
         date: new Date(order.createdAt).toLocaleDateString(),
         status: order.status,
         netAmount: order.netAmount,
-        phoneNumber: order.phoneNumber || "N/A",
+        phoneNumber: order.customerDetails?.phoneNumber || "N/A",
         subtotalAmount: order.subtotalAmount,
         discountAmount: order.discountAmount,
         discountPercentage: order.discountPercentage,
@@ -59,16 +61,13 @@ const AdminOrder = () => {
       setFilteredOrders(formattedOrders);
     } catch (error) {
       console.error("Error fetching orders:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     fetchOrders();
-  }, []);
-
-  // Remove the branches fetch since it's not needed for this API
-  useEffect(() => {
-    // This effect can be removed or kept for other functionality
   }, []);
 
   const handleFilter = () => {
@@ -93,6 +92,11 @@ const AdminOrder = () => {
     setSearchOrderId("");
     setFilteredOrders(orders);
     setCurrentPage(1);
+  };
+
+  // Callback function to refresh orders after status update
+  const handleStatusUpdate = () => {
+    fetchOrders();
   };
 
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -150,37 +154,55 @@ const AdminOrder = () => {
               onChange={(e) => setSearchOrderId(e.target.value)}
             />
           </div>
-
-       
         </div>
 
         <div className="flex gap-2.5 md:gap-4">
           <button
-            className="px-8 py-2 text-sm font-semibold text-white transition bg-orange-800 rounded-lg md:font-bold md:text-base hover:bg-orange-900"
+            className="px-8 py-2 text-sm font-semibold text-white transition bg-orange-800 rounded-lg md:font-bold md:text-base hover:bg-orange-900 disabled:opacity-50"
             onClick={handleFilter}
+            disabled={isLoading}
           >
             Filter
           </button>
           <button
-            className="px-8 py-2 text-sm font-semibold text-white transition bg-green-500 rounded-lg md:font-bold md:text-base hover:bg-green-600"
+            className="px-8 py-2 text-sm font-semibold text-white transition bg-green-500 rounded-lg md:font-bold md:text-base hover:bg-green-600 disabled:opacity-50"
             onClick={handleReset}
+            disabled={isLoading}
           >
             Reset
           </button>
           <button
-            className="px-8 py-2 text-sm font-semibold text-white transition bg-blue-600 rounded-lg md:font-bold md:text-base hover:bg-blue-700"
+            className="flex items-center gap-2 px-8 py-2 text-sm font-semibold text-white transition bg-blue-600 rounded-lg md:font-bold md:text-base hover:bg-blue-700 disabled:opacity-50"
             onClick={fetchOrders}
+            disabled={isLoading}
           >
-            Refresh
+            {isLoading && (
+              <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+              </svg>
+            )}
+            {isLoading ? 'Loading...' : 'Refresh'}
           </button>
         </div>
 
         <hr className="my-6 border-t border-gray-500" />
         
-        {filteredOrders.length > 0 ? (
+        {isLoading ? (
+          <div className="py-8 text-center text-white">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <svg className="w-6 h-6 animate-spin" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+              </svg>
+              <span className="text-lg">Loading Orders...</span>
+            </div>
+          </div>
+        ) : filteredOrders.length > 0 ? (
           <OrderTable 
             data={currentItems} 
             type="admin"
+            onStatusUpdate={handleStatusUpdate}
           />
         ) : (
           <div className="py-8 text-center text-white">
@@ -191,11 +213,13 @@ const AdminOrder = () => {
           </div>
         )}
         
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={handlePageChange}
-        />
+        {filteredOrders.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        )}
       </div>
     </div>
   );
