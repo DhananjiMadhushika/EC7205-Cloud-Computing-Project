@@ -2,16 +2,15 @@ import User from "../models/user.js";
 import Address from "../models/address.js";
 
 // Add Address
-// Add Address
 export const addAddress = async (req, res) => {
   try {
-    // Create the address
+  
     const address = await Address.create({ 
       ...req.body, 
       user: req.user.userId 
     });
     
-    // Add the address ID to the user's addresses array
+   
     await User.findByIdAndUpdate(
       req.user.userId,
       { $push: { addresses: address._id } },
@@ -34,16 +33,16 @@ export const listAddress = async (req, res) => {
   res.json(addresses);
 };
 
-// Delete Address
+
 // Delete Address
 export const deleteAddress = async (req, res) => {
   try {
     const addressId = req.params.id;
     
-    // Delete the address
+    
     await Address.findByIdAndDelete(addressId);
     
-    // Remove the address ID from the user's addresses array
+   
     await User.findByIdAndUpdate(
       req.user.userId,
       { $pull: { addresses: addressId } },
@@ -96,7 +95,6 @@ export const getUserById = async (req, res) => {
   } catch (error) {
     console.error("Error in getUserById:", error);
     
-    // Handle specific MongoDB errors
     if (error.name === 'CastError') {
       return res.status(400).json({ 
         error: "Invalid user ID format",
@@ -111,7 +109,7 @@ export const getUserById = async (req, res) => {
       });
     }
     
-    // Handle database connection errors
+   
     if (error.name === 'MongooseError' || error.name === 'MongoError') {
       return res.status(503).json({ 
         error: "Database connection error",
@@ -119,17 +117,17 @@ export const getUserById = async (req, res) => {
       });
     }
     
-    // Generic server error
+   
     res.status(500).json({ 
       error: "Internal server error",
       message: error.message,
-      // Only include stack trace in development
+     
       ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
     });
   }
 };
 
-// Get all users with role USER (no limit)
+// Get all users with role USER
 export const getAllNormalUsers = async (req, res) => {
   try {
     const users = await User.find({ role: "USER" }).populate("addresses");

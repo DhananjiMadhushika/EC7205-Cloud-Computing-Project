@@ -21,7 +21,7 @@ const AdminOrder = () => {
         return;
       }
 
-      // Updated API endpoint
+    
       const response = await fetch("http://localhost:3002/orders/all", {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -35,7 +35,7 @@ const AdminOrder = () => {
 
       const result = await response.json();
 
-      // Format orders based on the new data structure with proper null/undefined checks
+      
       const formattedOrders: Order[] = result.map((order: any) => ({
         id: order._id,
         orderId: order._id,
@@ -94,7 +94,7 @@ const AdminOrder = () => {
     setCurrentPage(1);
   };
 
-  // Callback function to refresh orders after status update
+  
   const handleStatusUpdate = () => {
     fetchOrders();
   };

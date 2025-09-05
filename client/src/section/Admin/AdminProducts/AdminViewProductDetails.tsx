@@ -37,12 +37,12 @@ interface ProductDetails {
   id: number;
   name: string;
   productImage?: string;
-  description?: string; // Added description field
+  description?: string; 
   volume?: number;
   price: number;
   stock?: number;
   category?: Category;
-  colors: ProductColor[]; // Changed from single color to array of ProductColor
+  colors: ProductColor[]; 
   finish?: string;
   coverage?: string;
   dryingTime?: string;

@@ -92,7 +92,7 @@ const AuthController = {
     await user.save();
 
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}&email=${email}`;
-    // TODO: send email via nodemailer
+    
     res.json({ success: "Password reset link sent", resetUrl });
   },
 

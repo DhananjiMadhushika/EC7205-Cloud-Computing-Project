@@ -38,13 +38,13 @@ function AdminProducts() {
       const response = await axios.get(url);
       console.log(response);
       
-      // Handle both response structures
+     
       const productsData = response.data.data || response.data || [];
       
-      // Transform the data to match expected structure
+      
       const transformedProducts = productsData.map((product: any) => ({
         ...product,
-        id: product._id || product.id, // Handle both _id and id
+        id: product._id || product.id, 
         colors: product.colors || [],
         category: product.category || null,
       }));
@@ -126,20 +126,20 @@ function AdminProducts() {
     setIsModalOpen(false);
   };
 
-  // Helper function to get colors from the new structure
+ 
   const getProductColors = (product: Product) => {
-    // Handle new many-to-many structure
+    
     if (product.colors && Array.isArray(product.colors)) {
       return product.colors.map(pc => pc.color || pc);
     }
-    // Fallback for old structure during migration
+   
     if (product.color) {
       return [product.color];
     }
     return [];
   };
 
-  // Helper function to truncate text
+  
   const truncateText = (text: string, maxLength: number) => {
     if (!text) return '';
     if (text.length <= maxLength) return text;
@@ -148,7 +148,7 @@ function AdminProducts() {
 
   return (
     <div className="flex-1 p-4 md:p-6 xl:p-10 bg-[#262626] min-h-screen rounded-2xl">
-      {/* Header with Add Buttons */}
+     
       <div className="flex flex-col-reverse justify-between mb-8 sm-425:flex-row sm-525:mb-10 gap-y-3">
         <h1 className="text-2xl font-semibold text-white md:text-2xl xl:text-3xl">
           List of Products

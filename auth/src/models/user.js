@@ -4,11 +4,10 @@ const UserSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     email: { type: String, unique: true, required: true },
-    password: { type: String, default: "" }, // Google users may not have password
+    password: { type: String, default: "" },
     phoneNumber: { type: String, default: "" },
     userImage: { type: String },
     role: { type: String, enum: ["ADMIN", "USER"], default: "USER" },
-    // Add the addresses field that your code expects
     addresses: [{ type: mongoose.Schema.Types.ObjectId, ref: "Address" }],
     defaultShippingAddress: { type: mongoose.Schema.Types.ObjectId, ref: "Address" },
     defaultBillingAddress: { type: mongoose.Schema.Types.ObjectId, ref: "Address" },

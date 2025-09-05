@@ -25,16 +25,16 @@ function AdminAddProducts() {
     
   const existingProduct = location.state?.product || null;
 
-  // Form states matching backend API
+
   const [id] = useState(existingProduct?.id || existingProduct?._id || null);
   const [name, setName] = useState(existingProduct?.name || "");
-  const [description, setDescription] = useState(existingProduct?.description || ""); // Added description state
+  const [description, setDescription] = useState(existingProduct?.description || ""); 
   const [volume, setVolume] = useState(existingProduct?.volume?.toString() || "");
   const [price, setPrice] = useState(existingProduct?.price?.toString() || "");
   const [stock, setStock] = useState(existingProduct?.stock?.toString() || "");
   const [categoryId, setCategoryId] = useState(existingProduct?.categoryId?.toString() || existingProduct?.category?._id || existingProduct?.category?.id || "");
   
-  // Changed to handle multiple colors
+ 
   const [selectedColorIds, setSelectedColorIds] = useState<string[]>(
     existingProduct?.colors?.map((pc: any) => (pc.colorId || pc.color?._id || pc.color?.id || pc._id || pc.id)?.toString()) || []
   );
@@ -50,7 +50,7 @@ function AdminAddProducts() {
   const [colors, setColors] = useState<Color[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Fetch categories and colors on component mount
+ 
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -59,7 +59,7 @@ function AdminAddProducts() {
           axios.get("http://localhost:3001/colors")
         ]);
         
-        // Transform the data to handle both _id and id formats
+       
         const transformedCategories = categoriesRes.data.map((cat: any) => ({
           ...cat,
           id: cat._id || cat.id
@@ -113,20 +113,20 @@ function AdminAddProducts() {
     }
   };
 
-  // Handle color selection/deselection
+
   const handleColorSelection = (colorId: string) => {
     setSelectedColorIds(prev => {
       if (prev.includes(colorId)) {
-        // Remove color if already selected
+        
         return prev.filter(id => id !== colorId);
       } else {
-        // Add color if not selected
+      
         return [...prev, colorId];
       }
     });
   };
 
-  // Handle select all colors
+ 
   const handleSelectAllColors = () => {
     if (selectedColorIds.length === colors.length) {
       setSelectedColorIds([]);
@@ -148,13 +148,13 @@ function AdminAddProducts() {
 
     const productData = {
       name,
-      description, // Added description to product data
+      description,
       volume: volume || undefined,
       price,
       stock: stock || undefined,
       productImage: productImage || existingProduct?.productImage,
       categoryId: categoryId || undefined,
-      colorIds: selectedColorIds, // Send array of color IDs
+      colorIds: selectedColorIds,
       finish: finish || undefined,
       coverage: coverage || undefined,
       dryingTime: dryingTime || undefined,
@@ -223,7 +223,7 @@ function AdminAddProducts() {
     }
   };
 
-  // Helper function to get the ID from category or color object
+ 
   const getItemId = (item: Category | Color): string => {
     return (item.id || item._id || '').toString();
   };
@@ -236,7 +236,7 @@ function AdminAddProducts() {
       </p>
 
       <form className="max-w-4xl mx-auto mt-5" onSubmit={addOrUpdateProduct}>
-        {/* Basic Product Information */}
+     
         <div className="grid sm-525:grid-cols-2 sm-525:gap-5 md:gap-6">
           <div className="mb-3 sm-525:mb-5">
             <label

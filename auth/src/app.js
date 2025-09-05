@@ -33,9 +33,9 @@ class App {
     this.app.use(express.urlencoded({ extended: false }));
     this.app.use(
       cors({
-        origin: "http://localhost:5173", // your frontend URL
+        origin: "http://localhost:5173",
         methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        credentials: true, // if you need cookies/auth
+        credentials: true, 
       })
     );
   }
