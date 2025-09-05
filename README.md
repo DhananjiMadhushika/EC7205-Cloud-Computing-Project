@@ -74,4 +74,4 @@ docker-compose up --build
 
 
 ## 🏗️ System Architecture & Database Schema
-![System Architecture & Database Schema ](.utils/Images/diagram.png)
+![System Architecture & Database Schema ](./utils/Images/diagram.png)
