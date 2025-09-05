@@ -1,45 +1,77 @@
-# nodejs-ecommerce-microservice
+# E-commerce Microservices Application
 
-A microservice sample for building an e-commerce backend. Medium article write-up on this project can be found here [here](https://medium.com/@nicholasgcc/building-scalable-e-commerce-backend-with-microservices-exploring-design-decisions-node-js-b5228080403b)
+A comprehensive e-commerce platform built with microservices architecture, featuring user authentication, product management, order processing, and real-time inventory management.
 
-## Software Architecture
-<img width="810" alt="image" src="https://user-images.githubusercontent.com/69677864/223613048-384c48cd-f846-4741-9b0d-90fbb2442590.png">
+## Architecture Overview
 
-- The application uses an API gateway to bind all services along a single front, acting as a proxy for the domains in which the `auth`, `order` and `product` microservices are deployed on
-- Each microservice, the API gateway and RabbitMQ are deployed as Docker images
-- Interactions between `product` service and `order` service uses [AMQP](https://www.amqp.org) protcol, using RabbitMQ which consists of two queues - `orders` and `products`. This saves on resources allocated for REST calls to MongoDB.
-- `product` service publishes to the order queue which is then consumed and collated by `order` service
-- `order` service publishes ordered products to the product queue which is then consumed by `product` to return order details
+This application follows a microservices architecture with the following components:
 
-## Microservice Structure
-<img width="678" alt="image" src="https://user-images.githubusercontent.com/69677864/223522265-3a585a38-0148-4921-bfea-fd19989c8bff.png">
+- **API Gateway** (Port 3003) - Central entry point routing requests to appropriate services
+- **Auth Service** (Port 3000) - User management and authentication with Google OAuth
+- **Product Service** (Port 3001) - Product CRUD operations, categories, and colors management
+- **Order Service** (Port 3002) - Cart management and order processing with stock updates
+- **Frontend** (Port 5173) - React/Vite web application with TypeScript and Tailwind CSS
 
-- The architecture for a microservice is inspired by Uncle Bob's [Clean Architecture](https://www.freecodecamp.org/news/a-quick-introduction-to-clean-architecture-990c014448d2), which supports strong modularity, loose coupling and dependency injection
+### Supporting Infrastructure
 
-Tech Stack: Node.js, Express, MongoDB, Docker, RabbitMQ, Mocha, Chai
+- **MongoDB** - Separate databases for users, products, and orders
+- **RabbitMQ** - Message queue for asynchronous communication between services
+- **Cloudinary** - Image storage and management for product images
 
-## Prerequisites
-- Have [npm](https://www.npmjs.com) and [Node.js](https://nodejs.dev/en/) on your machine
-- Have [Docker](https://www.docker.com) installed
-- Have [RabbitMQ](https://www.rabbitmq.com) installed
-- Set up your own [MongoDB](https://www.mongodb.com) collection with appropriate security/credential settings
+## 🚀 Quick Start
 
-## Steps to run
+### Prerequisites
 
-### On Docker
-1. Create a .env file following the format specified in the `/auth/env.example`, `order/env.example` and `product/env.example` directories, following the format specified in each microservice directory
-2. Run `docker-compose build`
-3. Run `docker-compose up`. Now you can test the APIs from localhost:3003
+- Docker and Docker Compose
+- Node.js 18+ (for local development)
+- MongoDB instance
+- RabbitMQ instance
+- Cloudinary account (for image management)
 
-### On localhost
-1. Create a .env file following the format specified in the `/auth/env.example`, `order/env.example` and `product/env.example` directories, following the format specified in each microservice directory
-2. Run `npm install` in the `/auth`, `/product`, `/order` and `/api-gateway` directories
-3. Run `npm start` on all four directories mentioned in the step above. Now you can test the APIs from localhost:3003
+### Option 1: Docker Compose (Recommended)
 
-## Future work and improvements
-- It could be useful to use Kubernetes for container orchestration in order to bundle up this project into one cohesive unit
+1. **Clone the repository**
+```bash
+git clone https://github.com/your-username/ecommerce-microservices.git
+cd ecommerce-microservices
+```
 
-- While I tried to follow a TDD approach - that is, letting test cases guide development - I eventually gave up on it in the name of speedy development. Ideally, I could have written unit tests first, and slowly increment up to integraton tests and then system tests.
-- The internal service of each microservice does not follow pure dependency injection advocated in Clean Architecture. The internal file structures and flow of dependencies are loosely based on Clean Architecture and the code does not fully utilise dependency injection principles. While I did try to minimise interdependencies, I found it a bit overkill to follow Clean Architecture fully for what is essentially a take-home project. But it is worth trying eventually.
-- I'd like to write a series of Bash scripts with various `curl` commands to automate API testing and follow them in sequence of particular use-cases (e.g. user publishes product -> another user logs in -> other user buys product -> ...)<br>
-- It could be a good exercise to deploy the databases across different platforms (e.g. Firebase, SQL, etc.) to prevent a single point of failure
+2. **Set up environment variables**
+```bash
+# Create .env files for each service
+# Auth Service (.env)
+MONGO_URI=mongodb://localhost:27017/auth_db
+JWT_SECRET=your_jwt_secret
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+
+# Product Service (.env)
+MONGO_URI=mongodb://localhost:27017/product_db
+CLOUDINARY_CLOUD_NAME=your_cloudinary_name
+CLOUDINARY_API_KEY=your_cloudinary_key
+CLOUDINARY_API_SECRET=your_cloudinary_secret
+RABBITMQ_URL=amqp://localhost:5672
+
+# Order Service (.env)
+MONGO_URI=mongodb://localhost:27017/order_db
+RABBITMQ_URL=amqp://localhost:5672
+```
+
+3. **Start all services**
+```bash
+docker-compose up --build
+```
+
+4. **Access the application**
+- Frontend: http://localhost:5173
+- API Gateway: http://localhost:3003
+- Auth Service: http://localhost:3000
+- Product Service: http://localhost:3001
+- Order Service: http://localhost:3002
+- RabbitMQ Management: http://localhost:15672 (guest/guest)
+
+### Option 2: Local Development
+
+
+## 🏗️ System Architecture & Database Schema
+![System Architecture & Database Schema ](.utils/Images/diagram.png)
