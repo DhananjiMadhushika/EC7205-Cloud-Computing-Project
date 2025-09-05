@@ -26,6 +26,7 @@ interface CartItemWithColor {
 export default function Cart() {
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState<CartItemWithColor[]>([]);
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [showOrderConfirmation, setShowOrderConfirmation] = useState(false);
   const [orderData, setOrderData] = useState<any>(null);
   const [addAddress, setAddAddress] = useState(false);
@@ -58,6 +59,8 @@ export default function Cart() {
         },
       });
       setCartItems(response.data);
+      // Reset selected items when cart is refreshed
+      setSelectedItems(new Set());
     } catch (error) {
       console.error("Failed to fetch cart items:", error);
       showToastError("Failed to load cart items");
@@ -66,87 +69,137 @@ export default function Cart() {
     }
   };
 
-  const handleProceedToCheckout = async () => {
-  console.log("Checkout button clicked");
-  const token = sessionStorage.getItem("authToken");
-  const userId = sessionStorage.getItem("userID");
-  
-  console.log("Token:", token ? "Present" : "Missing");
-  console.log("UserID:", userId);
-  
-  if (!token) {
-    showToastError("Please log in to proceed with checkout");
-    return;
-  }
-
-  if (!userId) {
-    showToastError("User ID not found. Please log in again.");
-    return;
-  }
-
-  if (cartItems.length === 0) {
-    showToastError("Your cart is empty");
-    return;
-  }
-
-  try {
-    console.log("Making request to:", `http://localhost:3000/users/${userId}`);
-    
-    const userResponse = await axios.get(`http://localhost:3000/users/${userId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+  // Handle individual item selection
+  const handleItemSelection = (itemId: string) => {
+    setSelectedItems(prev => {
+      const newSelected = new Set(prev);
+      if (newSelected.has(itemId)) {
+        newSelected.delete(itemId);
+      } else {
+        newSelected.add(itemId);
+      }
+      return newSelected;
     });
-    
-    console.log("User response received:", userResponse.data);
+  };
 
-    const userData = userResponse.data;
-    setUser(userData);
+  // Handle select all / deselect all
+  const handleSelectAll = () => {
+    if (selectedItems.size === cartItems.length) {
+      // If all items are selected, deselect all
+      setSelectedItems(new Set());
+    } else {
+      // If not all items are selected, select all
+      setSelectedItems(new Set(cartItems.map(item => item.id)));
+    }
+  };
 
-    const hasPhoneNumber = !!userData.phoneNumber;
-    const hasFormattedAddress = userData.addresses?.length > 0 && userData.addresses[0].formattedAddress;
+  // Get selected cart items
+  const getSelectedCartItems = () => {
+    return cartItems.filter(item => selectedItems.has(item.id));
+  };
+
+  // Calculate total price of selected items
+  const selectedTotalPrice = getSelectedCartItems().reduce(
+    (sum, item) =>
+      Number(sum) +
+      (Number(item.product?.price ?? 0) * Number(item.quantity ?? 1)),
+    0
+  );
+
+  // Calculate total price of all cart items
+  const totalPrice = cartItems.reduce(
+    (sum, item) =>
+      Number(sum) +
+      (Number(item.product?.price ?? 0) * Number(item.quantity ?? 1)),
+    0
+  );
+
+  const handleProceedToCheckout = async () => {
+    console.log("Checkout button clicked");
+    const token = sessionStorage.getItem("authToken");
+    const userId = sessionStorage.getItem("userID");
     
-    console.log("Has phone number:", hasPhoneNumber);
-    console.log("Has formatted address:", hasFormattedAddress);
-    console.log("Addresses:", userData.addresses);
+    console.log("Token:", token ? "Present" : "Missing");
+    console.log("UserID:", userId);
     
-    if (!hasPhoneNumber && !hasFormattedAddress) {
-      setAddAddress(true);
-      showToastError("Add your shipping address and phone number before checkout process");
-      return;
-    } else if (!hasFormattedAddress) {
-      setAddAddress(true);
-      showToastError("Add your shipping address before checkout process");
-      return;
-    } else if (!hasPhoneNumber) {
-      setAddAddress(true);
-      showToastError("Add your phone number before checkout process");
+    if (!token) {
+      showToastError("Please log in to proceed with checkout");
       return;
     }
 
-    // Prepare order data for confirmation
-    const orderConfirmationData = {
-      user: userData,
-      cartItems: cartItems,
-      totalPrice: totalPrice,
-      address: userData.addresses[0],
-      items: cartItems.map((cart) => {
-        const colorText = cart.color ? ` (${cart.color.name})` : "";
-        return `${cart.product?.name}${colorText}`;
-      }).join(", ")
-    };
-    
-    console.log("Order confirmation data:", orderConfirmationData);
-    setOrderData(orderConfirmationData);
-    setShowOrderConfirmation(true);
-    
-  } catch (error) {
-    console.log("Full error object:", error);
-    
-    
-    
-  }
-};
+    if (!userId) {
+      showToastError("User ID not found. Please log in again.");
+      return;
+    }
+
+    if (cartItems.length === 0) {
+      showToastError("Your cart is empty");
+      return;
+    }
+
+    if (selectedItems.size === 0) {
+      showToastError("Please select at least one item to proceed with checkout");
+      return;
+    }
+
+    try {
+      console.log("Making request to:", `http://localhost:3000/users/${userId}`);
+      
+      const userResponse = await axios.get(`http://localhost:3000/users/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      console.log("User response received:", userResponse.data);
+
+      const userData = userResponse.data;
+      setUser(userData);
+
+      const hasPhoneNumber = !!userData.phoneNumber;
+      const hasFormattedAddress = userData.addresses?.length > 0 && userData.addresses[0].formattedAddress;
+      
+      console.log("Has phone number:", hasPhoneNumber);
+      console.log("Has formatted address:", hasFormattedAddress);
+      console.log("Addresses:", userData.addresses);
+      
+      if (!hasPhoneNumber && !hasFormattedAddress) {
+        setAddAddress(true);
+        showToastError("Add your shipping address and phone number before checkout process");
+        return;
+      } else if (!hasFormattedAddress) {
+        setAddAddress(true);
+        showToastError("Add your shipping address before checkout process");
+        return;
+      } else if (!hasPhoneNumber) {
+        setAddAddress(true);
+        showToastError("Add your phone number before checkout process");
+        return;
+      }
+
+      // Get only selected items for order
+      const selectedCartItems = getSelectedCartItems();
+
+      // Prepare order data for confirmation
+      const orderConfirmationData = {
+        user: userData,
+        cartItems: selectedCartItems,
+        totalPrice: selectedTotalPrice,
+        address: userData.addresses[0],
+        items: selectedCartItems.map((cart) => {
+          const colorText = cart.color ? ` (${cart.color.name})` : "";
+          return `${cart.product?.name}${colorText}`;
+        }).join(", ")
+      };
+      
+      console.log("Order confirmation data:", orderConfirmationData);
+      setOrderData(orderConfirmationData);
+      setShowOrderConfirmation(true);
+      
+    } catch (error) {
+      console.log("Full error object:", error);
+    }
+  };
 
   const handleConfirmOrder = async () => {
     if (!orderData) return;
@@ -155,9 +208,15 @@ export default function Cart() {
     const token = sessionStorage.getItem("authToken");
     
     try {
+      // Send selected item IDs to the backend
+      const selectedCartItems = getSelectedCartItems();
+      const selectedItemIds = selectedCartItems.map(item => item.id);
+
       const response = await axios.post(
         "http://localhost:3002/orders/create",
-        {},
+        {
+          selectedItemIds: selectedItemIds // Send the selected item IDs
+        },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -169,8 +228,9 @@ export default function Cart() {
         showToastSuccess("Order placed successfully!");
         setShowOrderConfirmation(false);
         setOrderData(null);
+        setSelectedItems(new Set()); // Clear selections
         
-        // Refresh cart items (should be empty now)
+        // Refresh cart items
         await fetchCartItems();
         
         // Navigate to orders page
@@ -208,6 +268,14 @@ export default function Cart() {
         setCartItems((prevItems) =>
           prevItems.filter((item) => item.id !== productToDelete)
         );
+        
+        // Remove from selected items if it was selected
+        setSelectedItems(prev => {
+          const newSelected = new Set(prev);
+          newSelected.delete(productToDelete);
+          return newSelected;
+        });
+        
         setIsModalOpen(false);
         showToastSuccess("Item removed from cart");
       } catch (error) {
@@ -226,14 +294,6 @@ export default function Cart() {
     setProductToDelete(null);
     setIsModalOpen(false);
   };
-  
-  // Calculate total price of all cart items
-  const totalPrice = cartItems.reduce(
-    (sum, item) =>
-      Number(sum) +
-      (Number(item.product?.price ?? 0) * Number(item.quantity ?? 1)),
-    0
-  );
 
   if (loading) {
     return (
@@ -269,13 +329,43 @@ export default function Cart() {
         ) : (
           <div className="mt-8 lg:mt-10">
             <div className="flex flex-col p-2 shadow-xl sm:p-5 lg:p-10 rounded-2xl gap-y-6 md:gap-y-8 bg-slate-50">
+              
+              {/* Select All Option */}
+              <div className="flex items-center gap-3 p-3 border-b border-gray-300">
+                <input
+                  type="checkbox"
+                  id="select-all"
+                  checked={selectedItems.size === cartItems.length && cartItems.length > 0}
+                  onChange={handleSelectAll}
+                  className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                />
+                <label htmlFor="select-all" className="text-base font-medium text-gray-700">
+                  Select All ({selectedItems.size}/{cartItems.length})
+                </label>
+              </div>
+
               <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-x-8 xl:gap-x-14 gap-y-3 sm:gap-y-5">
                 {cartItems.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between p-2 border-b-2 border-gray-500 sm:p-4"
+                    className={`flex items-center justify-between p-2 border-b-2 sm:p-4 transition-colors ${
+                      selectedItems.has(item.id) 
+                        ? 'border-blue-500 bg-blue-50' 
+                        : 'border-gray-500'
+                    }`}
                   >
                     <div className="flex items-center gap-0 sm-425:gap-5 sm:gap-8 lg:gap-5">
+                      {/* Checkbox for item selection */}
+                      <div className="flex items-center mr-2 sm:mr-3">
+                        <input
+                          type="checkbox"
+                          id={`item-${item.id}`}
+                          checked={selectedItems.has(item.id)}
+                          onChange={() => handleItemSelection(item.id)}
+                          className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                        />
+                      </div>
+
                       <div className="flex items-center gap-2 sm-425:gap-3">
                         <div>
                           <img
@@ -340,24 +430,39 @@ export default function Cart() {
 
               {/* Cart Summary and Checkout */}
               <div className="pt-4 border-t-2 border-gray-300">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-lg font-semibold text-gray-700">
-                    Total Items: {cartItems.length}
-                  </span>
-                  <span className="text-xl font-bold text-gray-800">
-                    Total: Rs.{totalPrice.toFixed(2)}
-                  </span>
+                <div className="mb-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-base text-gray-600">
+                      Total Items in Cart: {cartItems.length}
+                    </span>
+                    <span className="text-base text-gray-600">
+                      Cart Total: Rs.{totalPrice.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-lg font-semibold text-blue-700">
+                      Selected Items: {selectedItems.size}
+                    </span>
+                    <span className="text-xl font-bold text-blue-800">
+                      Selected Total: Rs.{selectedTotalPrice.toFixed(2)}
+                    </span>
+                  </div>
                 </div>
                 <button
                   onClick={handleProceedToCheckout}
-                  disabled={isProcessingOrder}
+                  disabled={isProcessingOrder || selectedItems.size === 0}
                   className={`w-full px-5 py-3 text-base font-semibold text-white transition rounded-lg ${
-                    isProcessingOrder
+                    isProcessingOrder || selectedItems.size === 0
                       ? 'bg-gray-400 cursor-not-allowed'
                       : 'bg-green-500 hover:bg-green-600'
                   }`}
                 >
-                  {isProcessingOrder ? 'Processing...' : 'Proceed to Checkout'}
+                  {isProcessingOrder 
+                    ? 'Processing...' 
+                    : selectedItems.size === 0 
+                    ? 'Select items to checkout'
+                    : `Proceed to Checkout (${selectedItems.size} items)`
+                  }
                 </button>
               </div>
             </div>

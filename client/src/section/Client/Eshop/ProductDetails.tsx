@@ -1,4 +1,4 @@
-import { showToastinfo } from "@/utils/toast/infoToast";
+
 import { showToastSuccess } from "@/utils/toast/successToast";
 import { showToastError } from "@/utils/toast/errToast";
 import axios from "axios";
@@ -98,31 +98,6 @@ export default function ProductDetails() {
       }
     } finally {
       setAddingToCart(false);
-    }
-  };
-
-  const handleBuyNow = async () => {
-    const token = sessionStorage.getItem("authToken");
-    if (!token) {
-      navigate("/");
-      showToastError("Please log in first to make a purchase.");
-      return;
-    }
-
-    if (product?.colors && product.colors.length > 0 && !selectedColor) {
-      showToastError("Please select a color before purchasing.");
-      return;
-    }
-
-    if (quantity > (product?.stock || 0)) {
-      showToastError("Selected quantity exceeds available stock.");
-      return;
-    }
-
-    // Add to cart first, then navigate to cart for checkout
-    await handleAddToCart();
-    if (!addingToCart) {
-      navigate("/cart");
     }
   };
 
@@ -349,18 +324,6 @@ export default function ProductDetails() {
                 }`}
               >
                 {addingToCart ? 'Adding...' : (product.stock ?? 0) > 0 ? 'Add to Cart' : 'Out of Stock'}
-              </button>
-              
-              <button
-                onClick={handleBuyNow}
-                disabled={(product.stock ?? 0) === 0 || addingToCart}
-                className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all ${
-                  (product.stock ?? 0) > 0 && !addingToCart
-                    ? 'bg-green-600 text-white hover:bg-green-700'
-                    : 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                }`}
-              >
-                {addingToCart ? 'Processing...' : (product.stock ?? 0) > 0 ? 'Buy Now' : 'Out of Stock'}
               </button>
               
               <button className="px-6 py-3 text-gray-700 transition border-2 border-gray-300 rounded-lg hover:border-gray-400">

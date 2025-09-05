@@ -29,20 +29,20 @@ type User = {
 };
 
 type OrderProduct = {
-  id: number;
-  productId: number;
+  id: string;
+  productId: string;
   quantity: number;
   product: {
-    id: number;
+    id: string;
     name: string;
     price: number;
-    productImage?: string;
+    image?: string;
   };
   review?: Review;
 };
 
 type Order = {
-  id: number;
+  id: string;
   netAmount: number;
   subtotalAmount: number;
   discountAmount: number;
@@ -54,8 +54,8 @@ type Order = {
 
 type Review = {
   id?: number;
-  productId: number;
-  orderId: number;
+  productId: string;
+  orderId: string;
   rating: number;
   comment: string;
 };
@@ -82,7 +82,7 @@ export default function Account() {
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [reviews, setReviews] = useState<{ [key: number]: Review }>({});
+  const [reviews, setReviews] = useState<{ [key: string]: Review }>({});
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   useEffect(() => {
@@ -147,12 +147,26 @@ export default function Account() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      // Transform the API response to match frontend expectations
       const parsedOrders = response.data.map((order: any) => ({
         ...order,
+        id: order._id, // Convert _id to id
         netAmount: parseFloat(order.netAmount) || 0,
         subtotalAmount: parseFloat(order.subtotalAmount) || 0,
         discountAmount: parseFloat(order.discountAmount) || 0,
+        products: order.products.map((product: any) => ({
+          id: product._id, // Convert _id to id
+          productId: product.productId,
+          quantity: product.quantity,
+          product: {
+            id: product.productId,
+            name: product.name,
+            price: product.price,
+            image: product.image
+          }
+        }))
       }));
+      
       console.log("orders", parsedOrders);
       setOrders(parsedOrders);
     } catch (error) {
@@ -163,7 +177,7 @@ export default function Account() {
     }
   };
 
-  const fetchReviewsForOrder = async (orderId: number) => {
+  const fetchReviewsForOrder = async (orderId: string) => {
     try {
       const token = sessionStorage.getItem("authToken");
       if (!token) return;
@@ -175,7 +189,7 @@ export default function Account() {
         }
       );
       console.log("reviews:", response);
-      const reviewMap: { [key: number]: Review } = {};
+      const reviewMap: { [key: string]: Review } = {};
       response.data.forEach((review: Review) => {
         reviewMap[review.productId] = review;
       });
@@ -308,7 +322,7 @@ export default function Account() {
   };
 
   const handleReviewChange = (
-    productId: number,
+    productId: string,
     field: "rating" | "comment",
     value: string | number
   ) => {
@@ -317,7 +331,7 @@ export default function Account() {
       [productId]: {
         ...(prev[productId] || {
           productId,
-          orderId: selectedOrder?.id || 0,
+          orderId: selectedOrder?.id || "",
           rating: 5,
           comment: "",
         }),
@@ -326,7 +340,7 @@ export default function Account() {
     }));
   };
 
-  const submitReview = async (productId: number) => {
+  const submitReview = async (productId: string) => {
     if (!selectedOrder) return;
 
     const review = reviews[productId];
@@ -596,9 +610,9 @@ export default function Account() {
                                 className="flex items-center py-2 text-sm border-t border-gray-100"
                               >
                                 <div className="flex-shrink-0 w-16 h-16 overflow-hidden bg-gray-100 rounded-md">
-                                  {item.product && item.product.productImage ? (
+                                  {item.product && item.product.image ? (
                                     <img
-                                      src={item.product.productImage}
+                                      src={item.product.image}
                                       alt={item.product.name}
                                       className="object-cover w-full h-full"
                                     />
@@ -821,7 +835,6 @@ export default function Account() {
         )}
 
         {/* Review Modal */}
-        {/* Review Modal */}
         {showReviewModal && selectedOrder && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-60 backdrop-blur-xl">
             <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -870,9 +883,9 @@ export default function Account() {
                       >
                         <div className="flex items-start">
                           <div className="flex-shrink-0 w-16 h-16 overflow-hidden bg-gray-100 rounded-md">
-                            {item.product.productImage ? (
+                            {item.product.image ? (
                               <img
-                                src={item.product.productImage}
+                                src={item.product.image}
                                 alt={item.product.name}
                                 className="object-cover w-full h-full"
                               />
@@ -949,98 +962,6 @@ export default function Account() {
             </div>
           </div>
         )}
-        {/* {showReviewModal && selectedOrder && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-60 backdrop-blur-xl">
-            <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold">Review Your Purchase</h2>
-                <button 
-                  onClick={closeReviewModal}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              
-              <p className="mb-4 text-sm text-gray-600">
-                Order #{selectedOrder.id} • {formatDate(selectedOrder.createdAt)}
-              </p>
-              
-              <div className="space-y-6">
-                {selectedOrder.products.map((item) => {
-                  const review = reviews[item.productId] || { 
-                    productId: item.productId, 
-                    orderId: selectedOrder.id,
-                    rating: 5, 
-                    comment: "" 
-                  };
-                  
-                  return (
-                    <div key={item.id} className="p-4 border border-gray-200 rounded-lg">
-                      <div className="flex items-start">
-                        <div className="flex-shrink-0 w-16 h-16 overflow-hidden bg-gray-100 rounded-md">
-                          {item.product.productImage ? (
-                            <img 
-                              src={item.product.productImage} 
-                              alt={item.product.name} 
-                              className="object-cover w-full h-full"
-                            />
-                          ) : (
-                            <div className="flex items-center justify-center w-full h-full text-gray-400">
-                              No image
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-grow ml-4">
-                          <p className="font-medium">{item.product.name}</p>
-                          <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="mt-4">
-                      <p className="mb-2 font-medium">Your Rating</p>
-                        <div className="flex items-center mb-3">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <button
-                              key={star}
-                              onClick={() => handleReviewChange(item.productId, "rating", star)}
-                              className="mr-1 text-2xl focus:outline-none"
-                            >
-                              {star <= review.rating ? "★" : "☆"}
-                            </button>
-                          ))}
-                        </div>
-                        
-                        <div className="mb-3">
-                          <label className="block mb-1 text-sm font-medium text-gray-700">
-                            Your Review
-                          </label>
-                          <textarea
-                            value={review.comment}
-                            onChange={(e) => handleReviewChange(item.productId, "comment", e.target.value)}
-                            placeholder="Share your thoughts about this product..."
-                            className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                            rows={3}
-                          />
-                        </div>
-                        
-                        <button
-                          onClick={() => submitReview(item.productId)}
-                          disabled={isSubmittingReview}
-                          className="px-4 py-2 text-white transition-colors bg-green-500 rounded-lg hover:bg-green-600"
-                        >
-                          {review.id ? "Update Review" : "Submit Review"}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )} */}
       </div>
     </div>
   );

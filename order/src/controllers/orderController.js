@@ -14,60 +14,81 @@ const getUserFromToken = (req) => {
 export const createOrderFromCart = async (req, res) => {
   try {
     const user = getUserFromToken(req);
+    const { selectedItemIds } = req.body; // ✅ expect from frontend
 
-    // Get user's cart via HTTP
+    // Get user's cart
     const cart = await Cart.findOne({ userId: user.userId });
     if (!cart || cart.items.length === 0) {
       return res.status(400).json({ message: "Cart is empty" });
     }
 
-    // Get user details from auth service via HTTP
-    const userResponse = await axios.get(`http://auth:3000/users/${user.userId}`, {
-      headers: { Authorization: req.headers.authorization }
-    });
-    const userData = userResponse.data;
-
-    if (!userData.addresses || userData.addresses.length === 0 || !userData.addresses[0].formattedAddress) {
-      return res.status(400).json({ message: "Shipping address is required" });
+    if (!selectedItemIds || selectedItemIds.length === 0) {
+      return res.status(400).json({ message: "No items selected for order" });
     }
 
+    // ✅ Filter only selected cart items
+    const selectedItems = cart.items.filter((item) =>
+      selectedItemIds.includes(item._id.toString())
+    );
+    if (selectedItems.length === 0) {
+      return res.status(400).json({ message: "Selected items not found in cart" });
+    }
+
+    // Get user details from auth service
+    const userResponse = await axios.get(
+      `http://auth:3000/users/${user.userId}`,
+      { headers: { Authorization: req.headers.authorization } }
+    );
+    const userData = userResponse.data;
+
+    if (
+      !userData.addresses ||
+      userData.addresses.length === 0 ||
+      !userData.addresses[0].formattedAddress
+    ) {
+      return res.status(400).json({ message: "Shipping address is required" });
+    }
     if (!userData.phoneNumber) {
       return res.status(400).json({ message: "Phone number is required" });
     }
 
-    // Check product availability and get details via HTTP
+    // Check product availability and prepare order items
     const orderProducts = [];
-    for (const item of cart.items) {
+    for (const item of selectedItems) {
       try {
-        // Get product details
-        const productResponse = await axios.get(`http://product:3001/products/${item.productId}`);
+        const productResponse = await axios.get(
+          `http://product:3001/products/${item.productId}`
+        );
         const product = productResponse.data;
 
-        // Check stock availability
         if (product.stock < item.quantity) {
-          return res.status(400).json({ 
-            message: `Insufficient stock for product ${product.name}. Available: ${product.stock}, Requested: ${item.quantity}` 
+          return res.status(400).json({
+            message: `Insufficient stock for product ${product.name}. Available: ${product.stock}, Requested: ${item.quantity}`,
           });
         }
 
         orderProducts.push({
           productId: item.productId,
           name: product.name,
+          image: product.productImage,
           price: product.price,
           quantity: item.quantity,
-          color: item.color
+          color: item.color,
         });
       } catch (error) {
-        return res.status(404).json({ 
-          message: `Product ${item.productId} not found or unavailable` 
-        });
+        return res
+          .status(404)
+          .json({ message: `Product ${item.productId} not found or unavailable` });
       }
     }
 
-    const subtotalAmount = orderProducts.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const netAmount = subtotalAmount; // Add tax, shipping calculations here if needed
+    const subtotalAmount = orderProducts.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+    const netAmount = subtotalAmount; // add tax/shipping if needed
 
-    // Create order in database
+    // Create new order
     const order = new Order({
       userId: user.userId,
       products: orderProducts,
@@ -76,33 +97,33 @@ export const createOrderFromCart = async (req, res) => {
       address: userData.addresses[0].formattedAddress,
       phoneNumber: userData.phoneNumber,
       status: "PENDING",
-      events: [{ status: "PENDING" }]
+      events: [{ status: "PENDING" }],
     });
 
     await order.save();
 
-    // Clear cart after successful order (HTTP operation)
-    await Cart.findOneAndUpdate(
-      { userId: user.userId },
-      { items: [] }
+    // ✅ Remove only selected items from cart
+    cart.items = cart.items.filter(
+      (item) => !selectedItemIds.includes(item._id.toString())
     );
+    await cart.save();
 
-    // ONLY use RabbitMQ for inventory stock updates
-    const stockUpdates = orderProducts.map(p => ({
+    // Send stock update via RabbitMQ
+    const stockUpdates = orderProducts.map((p) => ({
       productId: p.productId,
-      quantity: p.quantity
+      quantity: p.quantity,
     }));
 
     await MessageBroker.publishMessage("inventory_updates", {
       type: "REDUCE_STOCK",
       products: stockUpdates,
       orderId: order._id,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
 
     res.status(201).json({
       message: "Order created successfully",
-      order: order
+      order,
     });
   } catch (error) {
     console.error("Error creating order:", error);
