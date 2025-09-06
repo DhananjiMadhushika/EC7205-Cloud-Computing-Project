@@ -53,18 +53,18 @@ Create `.env` files for each service:
 
 ```env
 MONGO_URI=mongodb://localhost:27017/auth_db
-JWT_SECRET=your_jwt_secret
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
+JWT_SECRET=jwt_secret
+GOOGLE_CLIENT_ID=google_client_id
+GOOGLE_CLIENT_SECRET=google_client_secret
 ```
 
 **Product Service (/product-service/.env)**
 
 ```env
 MONGO_URI=mongodb://localhost:27017/product_db
-CLOUDINARY_CLOUD_NAME=your_cloudinary_name
-CLOUDINARY_API_KEY=your_cloudinary_key
-CLOUDINARY_API_SECRET=your_cloudinary_secret
+CLOUDINARY_CLOUD_NAME=cloudinary_name
+CLOUDINARY_API_KEY=cloudinary_key
+CLOUDINARY_API_SECRET=cloudinary_secret
 RABBITMQ_URL=amqp://localhost:5672
 ```
 
