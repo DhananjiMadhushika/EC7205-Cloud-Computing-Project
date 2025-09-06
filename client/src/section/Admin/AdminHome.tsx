@@ -1,5 +1,5 @@
 import { Order } from "@/types/OrderTypes";
-import { Product } from "@/types/ProductType";
+
 import {
   CategoryScale, Chart as ChartJS, ChartOptions, Legend, LinearScale, LineElement,
   PointElement, Tooltip
@@ -9,8 +9,8 @@ import { Line } from "react-chartjs-2";
 import "swiper/css";
 import "swiper/css/pagination";
 import { Autoplay } from "swiper/modules";
-import { Swiper, SwiperSlide } from "swiper/react";
-import putty from "/client/product/putty.png";
+import { Swiper } from "swiper/react";
+
 
 ChartJS.register(
   LineElement,
@@ -27,9 +27,7 @@ export default function AdminHome() {
   const [todaySales, setTodaySales] = useState<number>(0);
   const [yearlySales, setYearlySales] = useState<number>(0);
   const [monthlySalesData, setMonthlySalesData] = useState<number[]>(Array(12).fill(0));
-  const [customerCount, setCustomerCount] = useState<number>(0);
-  const [totalOrders, setTotalOrders] = useState<number>(0);
-  const [pendingOrders, setPendingOrders] = useState<number>(0);
+ 
   const [loading, setLoading] = useState<boolean>(true);
   
   useEffect(() => {
@@ -113,9 +111,7 @@ export default function AdminHome() {
         setTodaySales(todaySalesTotal);
         setYearlySales(yearlySalesTotal);
         setMonthlySalesData(monthlySalesData);
-        setTotalOrders(orders.length);
-        setPendingOrders(pendingOrdersCount);
-        setCustomerCount(uniqueCustomers.size);
+        
         
       } catch (error) {
         console.error("Error fetching orders:", error);
@@ -124,36 +120,7 @@ export default function AdminHome() {
       }
     };
 
-    const fetchUsers = async () => {
-      try {
-        const token = sessionStorage.getItem("authToken");
-        if (!token) {
-          console.log("No auth token found");
-          return;
-        }
-    
-        const response = await fetch("http://localhost:5000/api/users/", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-    
-        if (!response.ok) {
-          throw new Error(`API request failed with status ${response.status}`);
-        }
-    
-        const result = await response.json();
-        console.log("API Response:", result);
-    
-        if (response.status === 200) {
-          const customers = result.filter((user: any) => user.role === "USER");
-          setCustomerCount(customers.length);
-        }
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      }
-    };
+  
 
     fetchOrders();
     // Only fetch users if you have a separate user endpoint, otherwise customer count is derived from orders

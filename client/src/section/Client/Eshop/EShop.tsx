@@ -21,7 +21,7 @@ const ITEMS_PER_PAGE = 12;
 
 export default function EShop() {
   const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(false);
+  
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -111,8 +111,8 @@ export default function EShop() {
   };
 
   useEffect(() => {
-    const token = sessionStorage.getItem("authToken");
-    setIsLogin(!!token);
+    
+    
     fetchFiltersData();
   }, []);
 

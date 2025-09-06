@@ -112,7 +112,7 @@ const AdminNavMobile: React.FC<MobileNavProps> = ({navArray = mainItems}) => {
 
   return (
     <div>
-      <div className="w-full md:hidden fixed z-50 bg-gradient-to-br from-black via-green-950 to-black">
+      <div className="fixed z-50 w-full md:hidden bg-gradient-to-br from-black via-green-950 to-black">
         <div className="flex items-center justify-between p-4 h-[78px]">
           {/* Logo */}
           <img
@@ -133,7 +133,7 @@ const AdminNavMobile: React.FC<MobileNavProps> = ({navArray = mainItems}) => {
             isOpen ? "left-0" : "left-[-750px]"
           }  top-0 w-full h-full bg-black  `}
         >
-          <div className=" w-full h-full relative text-white ">
+          <div className="relative w-full h-full text-white ">
             <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-br from-black via-green-950 to-black ">
               {/* Logo */}
               <img
@@ -153,26 +153,27 @@ const AdminNavMobile: React.FC<MobileNavProps> = ({navArray = mainItems}) => {
             <div className="p-4">
               <div className="flex flex-col w-full rounded-2xl p-4 py-5 bg-[#262626] h-[430px]">
                 {/* Scrollable Menu Items */}
-                <div className="flex flex-col  overflow-y-scroll scrollbar-hide">
-                  {navArray.map((item, index) => {
-                    const isActive =
-                      location.pathname.startsWith(`/${item.url}`) ||
-                      !!item.subMenu?.some((sub) =>
-                        location.pathname.startsWith(`/${sub.url}`)
-                      );
+                <div className="flex flex-col overflow-y-scroll scrollbar-hide">
+                  {navArray.map((item: MobileNavItem, index) => {
+  const isActive =
+    location.pathname.startsWith(`/${item.url}`) ||
+    !!item.subMenu?.some((sub: { label: string; url: string }) =>
+      location.pathname.startsWith(`/${sub.url}`)
+    );
 
-                    return (
-                      <MenuItem
-                        key={index}
-                        imageSrc={item.imageSrc}
-                        label={item.label}
-                        isActive={isActive}
-                        onClick={() => pageNavigation(item.url)}
-                        isOpen={isOpen}
-                        subMenu={item.subMenu}
-                      />
-                    );
-                  })}
+  return (
+    <MenuItem
+      key={index}
+      imageSrc={item.imageSrc}
+      label={item.label}
+      isActive={isActive}
+      onClick={() => pageNavigation(item.url)}
+      isOpen={isOpen}
+      subMenu={item.subMenu}  // <-- pass subMenu down
+    />
+  );
+})}
+
                 </div>
               </div>
             </div>

@@ -56,6 +56,15 @@ services:
       - RABBITMQ_URL=amqp://rabbitmq:5672
     networks:
       - ecommerce
+  
+  client:
+    build: ./client
+    ports:
+      - "5173:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - ecommerce
 
 networks:
   ecommerce:

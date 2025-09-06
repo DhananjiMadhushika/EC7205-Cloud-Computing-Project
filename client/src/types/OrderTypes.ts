@@ -2,7 +2,7 @@ import { Product } from "./ProductType";
 import { User } from "./UserTypes";
 
 export interface Order {
-  phoneNumber: ReactI18NextChildren | Iterable<ReactI18NextChildren>;
+  phoneNumber: string;
   products: Product;
   id: number;
   userId: string;
