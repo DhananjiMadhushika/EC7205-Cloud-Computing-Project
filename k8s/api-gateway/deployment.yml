@@ -47,13 +47,13 @@ spec:
               key: RABBITMQ_URL
         livenessProbe:
           httpGet:
-            path: /health
+            path: /  # Changed from /health to /
             port: 3003
           initialDelaySeconds: 30
           periodSeconds: 10
         readinessProbe:
           httpGet:
-            path: /health
+            path: /  # Changed from /health to /
             port: 3003
           initialDelaySeconds: 5
           periodSeconds: 5
@@ -70,4 +70,4 @@ spec:
   ports:
   - port: 3003
     targetPort: 3003
-    nodePort: 30033
+    nodePort: 30003 
