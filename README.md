@@ -108,11 +108,11 @@ kubectl apply -f k8s/rabbitmq/
 
 3. **Deploy microservices**
 ```bash
-kubectl apply -f k8s/auth-service/
-kubectl apply -f k8s/product-service/
-kubectl apply -f k8s/order-service/
+kubectl apply -f k8s/auth/
+kubectl apply -f k8s/product/
+kubectl apply -f k8s/order/
 kubectl apply -f k8s/api-gateway/
-kubectl apply -f k8s/frontend/
+kubectl apply -f k8s/client/
 ```
 
 4. **Get external IPs**
